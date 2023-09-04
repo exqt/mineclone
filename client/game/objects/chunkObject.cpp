@@ -1,0 +1,212 @@
+#include "chunkObject.hpp"
+
+#include "../../core/managers/assetManager.hpp"
+
+/* Chunk Mesh */
+ChunkMesh::ChunkMesh() {
+  glGenBuffers(1, &vboMetadata);
+}
+
+ChunkMesh::~ChunkMesh() {
+  glDeleteBuffers(1, &vboMetadata);
+}
+
+void ChunkMesh::update(std::vector<float> vertices, std::vector<float> uvs, std::vector<uint32_t> metadata) {
+  Mesh::update(vertices, uvs);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vboMetadata);
+  glBufferData(GL_ARRAY_BUFFER, metadata.size() * sizeof(uint32_t), metadata.data(), GL_STATIC_DRAW);
+  glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, 0, (void*)0);
+  glEnableVertexAttribArray(2);
+}
+
+/* Chunk Object */
+ChunkObject::ChunkObject(World* world, int ox, int oy, int oz) {
+  this->world = world;
+  this->ox = ox;
+  this->oy = oy;
+  this->oz = oz;
+
+  mesh = std::make_unique<ChunkMesh>();
+}
+
+ChunkObject::~ChunkObject() {
+}
+
+BlockType ChunkObject::getBlock(int x, int y, int z) {
+  if (0 <= x && x < ChunkData::BLOCKS_X &&
+      0 <= y && y < ChunkData::BLOCKS_Y &&
+      0 <= z && z < ChunkData::BLOCKS_Z)
+  {
+    return chunkData->get(x, y, z);
+  }
+  else return world->getBlock(
+    x + ox * ChunkData::BLOCKS_X,
+    y + oy * ChunkData::BLOCKS_Y,
+    z + oz * ChunkData::BLOCKS_Z
+  );
+}
+
+void ChunkObject::setChunkData(ChunkDataPtr chunkData) {
+  this->chunkData = chunkData;
+}
+
+void ChunkObject::update(float dt) {
+}
+
+void ChunkObject::draw(DrawContext& ctx) {
+  if (chunkData == nullptr) return;
+  if (mesh->count == 0) return;
+
+  auto shader = AssetManager::Instance()->getShader("block");
+  shader->bind();
+  shader->setMat4("uProjView", ctx.camera->getProjectionViewMatrix());
+  shader->setMat4(
+    "uModel",
+    glm::translate(
+      glm::mat4(1.0),
+      glm::vec3(
+        ox*ChunkData::BLOCKS_X,
+        oy*ChunkData::BLOCKS_Y,
+        oz*ChunkData::BLOCKS_Z
+      )
+    )
+  );
+
+  auto texture = AssetManager::Instance()->getTexture("blocks.png");
+  texture->bind();
+
+  mesh->draw();
+}
+
+bool isTransparent(BlockType block) {
+  return block == NONE || block == WATER || block == SEA_WATER || block == GLASS;
+}
+
+GLuint vertexAO(GLuint side1, GLuint side2, GLuint corner) {
+  return side1 + side2 + std::max(corner, side1 & side2);
+}
+
+void ChunkObject::buildMesh() {
+  std::vector<float> positions;
+  std::vector<float> uvs;
+  std::vector<GLuint> metadata;
+
+  for (int ix = 0; ix < ChunkData::BLOCKS_X; ix++) {
+    for (int iy = 0; iy < ChunkData::BLOCKS_Y; iy++) {
+      for (int iz = 0; iz < ChunkData::BLOCKS_Z; iz++) {
+        BlockType block = chunkData->get(ix, iy, iz);
+        if (block == NONE) continue;
+
+        int visibles[6] = {
+          isTransparent(getBlock(ix, iy + 1, iz)), // top
+          isTransparent(getBlock(ix, iy, iz + 1)), // front
+          isTransparent(getBlock(ix + 1, iy, iz)), // right
+          isTransparent(getBlock(ix, iy, iz - 1)), // back
+          isTransparent(getBlock(ix - 1, iy, iz)), // left
+          isTransparent(getBlock(ix, iy - 1, iz)) // bottom
+        };
+
+        // https://0fps.net/2013/07/03/ambient-occlusion-for-minecraft-like-worlds/
+        for (int iFace = 0; iFace < 6; iFace++) { // for each face
+          if (!visibles[iFace]) continue;
+
+          GLuint v00 = 0, v01 = 0, v10 = 0, v11 = 0;
+          GLuint a00 = 0, a01 = 0, a10 = 0, a11 = 0;
+
+          GLuint side0, side1, side2, side3, corner00, corner01, corner10, corner11;
+
+          if (iFace == 0) { // Top
+            side0 = !isTransparent(getBlock(ix    , iy + 1, iz - 1)); // up
+            side1 = !isTransparent(getBlock(ix + 1, iy + 1, iz    )); // right
+            side2 = !isTransparent(getBlock(ix    , iy + 1, iz + 1)); // down
+            side3 = !isTransparent(getBlock(ix - 1, iy + 1, iz    )); // left
+            corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
+            corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
+            corner10 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
+            corner11 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
+          }
+          else if (iFace == 1) { // Front
+            side0 = !isTransparent(getBlock(ix    , iy + 1, iz + 1)); // up
+            side1 = !isTransparent(getBlock(ix + 1, iy    , iz + 1)); // right
+            side2 = !isTransparent(getBlock(ix    , iy - 1, iz + 1)); // down
+            side3 = !isTransparent(getBlock(ix - 1, iy    , iz + 1)); // left
+            corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
+            corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
+            corner10 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
+            corner11 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
+          }
+          else if (iFace == 2) { // Right
+            side0 = !isTransparent(getBlock(ix + 1, iy + 1, iz    )); // up
+            side1 = !isTransparent(getBlock(ix + 1, iy    , iz - 1)); // right
+            side2 = !isTransparent(getBlock(ix + 1, iy - 1, iz    )); // down
+            side3 = !isTransparent(getBlock(ix + 1, iy    , iz + 1)); // left
+            corner00 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
+            corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
+            corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
+            corner11 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
+          }
+          else if (iFace == 3) { // Back
+            side0 = !isTransparent(getBlock(ix    , iy + 1, iz - 1)); // up
+            side1 = !isTransparent(getBlock(ix - 1, iy    , iz - 1)); // right
+            side2 = !isTransparent(getBlock(ix    , iy - 1, iz - 1)); // down
+            side3 = !isTransparent(getBlock(ix + 1, iy    , iz - 1)); // left
+            corner00 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
+            corner01 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
+            corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
+            corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
+          }
+          else if (iFace == 4) { // Left
+            side0 = !isTransparent(getBlock(ix - 1, iy + 1, iz    )); // up
+            side1 = !isTransparent(getBlock(ix - 1, iy    , iz + 1)); // right
+            side2 = !isTransparent(getBlock(ix - 1, iy - 1, iz    )); // down
+            side3 = !isTransparent(getBlock(ix - 1, iy    , iz - 1)); // left
+            corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
+            corner01 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
+            corner10 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
+            corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
+          }
+          else { // Bottom
+            side0 = !isTransparent(getBlock(ix    , iy - 1, iz - 1)); // up
+            side1 = !isTransparent(getBlock(ix - 1, iy - 1, iz    )); // right
+            side2 = !isTransparent(getBlock(ix    , iy - 1, iz + 1)); // down
+            side3 = !isTransparent(getBlock(ix + 1, iy - 1, iz    )); // left
+            corner00 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
+            corner01 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
+            corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
+            corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
+          }
+
+          a00 = vertexAO(side3, side0, corner00);
+          a01 = vertexAO(side0, side1, corner01);
+          a10 = vertexAO(side2, side3, corner10);
+          a11 = vertexAO(side1, side2, corner11);
+
+          GLuint quadAO = (a00 << 0) | (a01 << 2) | (a10 << 4) | (a11 << 6);
+            v00 = quadAO;
+            v01 = quadAO;
+            v10 = quadAO;
+            v11 = quadAO;
+
+          for (int j = 0; j < 6; j++) { // add vec3 * 6 positions
+            positions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 0] + ix);
+            positions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 1] + iy);
+            positions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 2] + iz);
+          }
+
+          int uvFace = iFace == 5 ? 2 : (iFace == 0 ? 0 : 1);
+          int uvOffsetX = (block / 16) * 3;
+          int uvOffsetY = block % 16;
+          for (int j = 0; j < 6; j++) { // add vec2 * 6 uvs
+            uvs.push_back(BLOCK_VERTEX_UVS[2*6*uvFace + 2*j + 0] + uvOffsetX);
+            uvs.push_back(BLOCK_VERTEX_UVS[2*6*uvFace + 2*j + 1] + uvOffsetY);
+          }
+
+          metadata.insert(metadata.end(), {v10, v01, v00, v01, v10, v11});
+        }
+      }
+    }
+  }
+
+  mesh->update(positions, uvs, metadata);
+}

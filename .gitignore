@@ -1,0 +1,9 @@
+.vscode/*
+
+build/*
+!build/assets
+
+
+temp/*
+
+test/
