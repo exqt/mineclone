@@ -55,6 +55,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${THIRD_PARTY_DIR}/FastNoise2
   ${THIRD_PARTY_DIR}/imgui
   ${THIRD_PARTY_DIR}/enet/include
+  ${THIRD_PARTY_DIR}/glm
 )
 
 # if not debug build then link statically
