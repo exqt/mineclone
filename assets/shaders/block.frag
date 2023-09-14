@@ -16,9 +16,13 @@ float bilinear(float v00, float v01, float v10, float v11, vec2 uv) {
 }
 
 void main() {
-  vec2 aoXY = fract(vTexCoord);
   vec2 uv = vTexCoord / 256 * 16;
   vec4 color = texture(tex, uv);
+  if (color.a < 0.5) {
+    discard;
+  }
+
+  vec2 aoXY = fract(vTexCoord);
 
   float a00 = (vAmbientOcclusion >> 0) & 0x3u;
   float a01 = (vAmbientOcclusion >> 2) & 0x3u;

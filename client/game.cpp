@@ -65,7 +65,6 @@ void Game::update(float dt) {
 
   processChunks();
 
-
   for (auto& [key, chunkObject] : chunkObjects) {
     chunkObject->update(dt);
   }
@@ -126,7 +125,7 @@ void Game::setGameSize(int width, int height) {
 void Game::processChunks() {
   world->update(player->position);
 
-  const int maxBuildsPerFrame = 16;
+  const int maxBuildsPerFrame = 8;
   auto &meshBuildQueue = world->getRenderQueue();
   for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue.empty(); i++) {
     auto id = meshBuildQueue.front(); meshBuildQueue.pop();

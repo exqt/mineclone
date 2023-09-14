@@ -3,7 +3,6 @@
 #include <iostream>
 
 ChunkData::ChunkData() {
-  std::fill(&blocks[0][0][0], &blocks[0][0][0] + BLOCKS_TOTAL, BlockType::NONE);
 }
 
 ChunkData::~ChunkData() {

@@ -14,16 +14,15 @@ World::~World() {
 }
 
 void World::update(glm::vec3 playerPos) {
-  loadChunkInside(playerPos.x, playerPos.y, playerPos.z, 64);
-  unloadChunkOutside(playerPos.x, playerPos.y, playerPos.z, 128);
+  loadChunkInside(playerPos.x, playerPos.y, playerPos.z, 128);
+  unloadChunkOutside(playerPos.x, playerPos.y, playerPos.z, 160);
 
-  const int maxChunkLoadsPerFrame = 16;
+  const int maxChunkLoadsPerFrame = 8;
   for (int i = 0; i < maxChunkLoadsPerFrame && !chunkLoadQueue.empty(); i++) {
     auto id = chunkLoadQueue.front(); chunkLoadQueue.pop();
     auto [ox, oy, oz] = id;
     ChunkKeyType key = toChunkKey(ox, oy, oz);
     chunks[key] = terrain->getChunkData(ox, oy, oz);
-    // TODO
 
     for (int ix = -1; ix <= 1; ix++) {
       for (int iy = -1; iy <= 1; iy++) {

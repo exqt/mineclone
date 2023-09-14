@@ -7,7 +7,7 @@
 class ChunkData {
 public:
   static const int BLOCKS_X = 16;
-  static const int BLOCKS_Y = 64;
+  static const int BLOCKS_Y = 128;
   static const int BLOCKS_Z = 16;
   static const int BLOCKS_TOTAL = BLOCKS_X * BLOCKS_Y * BLOCKS_Z;
 

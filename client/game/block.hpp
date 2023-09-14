@@ -13,13 +13,11 @@ enum BlockType : unsigned char {
   STONE,
   SAND,
   BEDROCK,
-
+  WATER,
   TREE_TRUNK,
   TREE_LEAVES,
+  TREE_LEAVES_SAKURA,
   GLASS,
-
-  SEA_WATER,
-  WATER,
 
   COLOR0,
   COLOR1,
