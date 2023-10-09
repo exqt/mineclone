@@ -20,7 +20,7 @@ typedef unsigned long long int ChunkKeyType;
 
 class World {
 public:
-  static const int MAX_HEIGHT = 256;
+  static const int MAX_HEIGHT = 128;
   static const int MAX_CHUNKS_Y = MAX_HEIGHT / ChunkData::BLOCKS_Y - 1;
 
   World();

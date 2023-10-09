@@ -17,7 +17,7 @@ void World::update(glm::vec3 playerPos) {
   loadChunkInside(playerPos.x, playerPos.y, playerPos.z, 128);
   unloadChunkOutside(playerPos.x, playerPos.y, playerPos.z, 160);
 
-  const int maxChunkLoadsPerFrame = 8;
+  const int maxChunkLoadsPerFrame = 4;
   for (int i = 0; i < maxChunkLoadsPerFrame && !chunkLoadQueue.empty(); i++) {
     auto id = chunkLoadQueue.front(); chunkLoadQueue.pop();
     auto [ox, oy, oz] = id;
@@ -32,7 +32,7 @@ void World::update(glm::vec3 playerPos) {
           auto adjacentKey = toChunkKey(ox + ix, y, oz + iz);
           adjacentLoadedCount[adjacentKey] += 1;
 
-          int required = (y == 0 || y == MAX_CHUNKS_Y) ? 18 : 27;
+          int required = 9;
           if (adjacentLoadedCount[adjacentKey] == required) {
             renderQueue.emplace(ox + ix, y, oz + iz);
             if (chunks[toChunkKey(ox + ix, y, oz + iz)] == nullptr) {
