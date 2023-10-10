@@ -83,6 +83,10 @@ bool isTransparent(BlockType block) {
   return block == NONE || block == WATER || block == GLASS || block == TREE_LEAVES;
 }
 
+bool shouldApplyAO(BlockType block) {
+  return block != NONE && block != WATER && block != GLASS;
+}
+
 GLuint vertexAO(GLuint side1, GLuint side2, GLuint corner) {
   return side1 + side2 + std::max(corner, side1 & side2);
 }
@@ -123,67 +127,67 @@ void ChunkObject::buildMesh() {
           GLuint v00 = 0, v01 = 0, v10 = 0, v11 = 0;
           GLuint a00 = 0, a01 = 0, a10 = 0, a11 = 0;
 
-          if (!isTransparent(getBlock(ix, iy, iz))) {
+          if (shouldApplyAO(getBlock(ix, iy, iz))) {
             GLuint side0, side1, side2, side3, corner00, corner01, corner10, corner11;
             if (iFace == 0) { // Top
-              side0 = !isTransparent(getBlock(ix    , iy + 1, iz - 1)); // up
-              side1 = !isTransparent(getBlock(ix + 1, iy + 1, iz    )); // right
-              side2 = !isTransparent(getBlock(ix    , iy + 1, iz + 1)); // down
-              side3 = !isTransparent(getBlock(ix - 1, iy + 1, iz    )); // left
-              corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
-              corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
-              corner10 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
-              corner11 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
+              side0 = shouldApplyAO(getBlock(ix    , iy + 1, iz - 1)); // up
+              side1 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz    )); // right
+              side2 = shouldApplyAO(getBlock(ix    , iy + 1, iz + 1)); // down
+              side3 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz    )); // left
+              corner00 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz - 1));
+              corner01 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz - 1));
+              corner10 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz + 1));
+              corner11 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz + 1));
             }
             else if (iFace == 1) { // Front
-              side0 = !isTransparent(getBlock(ix    , iy + 1, iz + 1)); // up
-              side1 = !isTransparent(getBlock(ix + 1, iy    , iz + 1)); // right
-              side2 = !isTransparent(getBlock(ix    , iy - 1, iz + 1)); // down
-              side3 = !isTransparent(getBlock(ix - 1, iy    , iz + 1)); // left
-              corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
-              corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
-              corner10 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
-              corner11 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
+              side0 = shouldApplyAO(getBlock(ix    , iy + 1, iz + 1)); // up
+              side1 = shouldApplyAO(getBlock(ix + 1, iy    , iz + 1)); // right
+              side2 = shouldApplyAO(getBlock(ix    , iy - 1, iz + 1)); // down
+              side3 = shouldApplyAO(getBlock(ix - 1, iy    , iz + 1)); // left
+              corner00 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz + 1));
+              corner01 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz + 1));
+              corner10 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz + 1));
+              corner11 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz + 1));
             }
             else if (iFace == 2) { // Right
-              side0 = !isTransparent(getBlock(ix + 1, iy + 1, iz    )); // up
-              side1 = !isTransparent(getBlock(ix + 1, iy    , iz - 1)); // right
-              side2 = !isTransparent(getBlock(ix + 1, iy - 1, iz    )); // down
-              side3 = !isTransparent(getBlock(ix + 1, iy    , iz + 1)); // left
-              corner00 = !isTransparent(getBlock(ix + 1, iy + 1, iz + 1));
-              corner01 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
-              corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
-              corner11 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
+              side0 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz    )); // up
+              side1 = shouldApplyAO(getBlock(ix + 1, iy    , iz - 1)); // right
+              side2 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz    )); // down
+              side3 = shouldApplyAO(getBlock(ix + 1, iy    , iz + 1)); // left
+              corner00 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz + 1));
+              corner01 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz - 1));
+              corner10 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz + 1));
+              corner11 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz - 1));
             }
             else if (iFace == 3) { // Back
-              side0 = !isTransparent(getBlock(ix    , iy + 1, iz - 1)); // up
-              side1 = !isTransparent(getBlock(ix - 1, iy    , iz - 1)); // right
-              side2 = !isTransparent(getBlock(ix    , iy - 1, iz - 1)); // down
-              side3 = !isTransparent(getBlock(ix + 1, iy    , iz - 1)); // left
-              corner00 = !isTransparent(getBlock(ix + 1, iy + 1, iz - 1));
-              corner01 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
-              corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
-              corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
+              side0 = shouldApplyAO(getBlock(ix    , iy + 1, iz - 1)); // up
+              side1 = shouldApplyAO(getBlock(ix - 1, iy    , iz - 1)); // right
+              side2 = shouldApplyAO(getBlock(ix    , iy - 1, iz - 1)); // down
+              side3 = shouldApplyAO(getBlock(ix + 1, iy    , iz - 1)); // left
+              corner00 = shouldApplyAO(getBlock(ix + 1, iy + 1, iz - 1));
+              corner01 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz - 1));
+              corner10 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz - 1));
+              corner11 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz - 1));
             }
             else if (iFace == 4) { // Left
-              side0 = !isTransparent(getBlock(ix - 1, iy + 1, iz    )); // up
-              side1 = !isTransparent(getBlock(ix - 1, iy    , iz + 1)); // right
-              side2 = !isTransparent(getBlock(ix - 1, iy - 1, iz    )); // down
-              side3 = !isTransparent(getBlock(ix - 1, iy    , iz - 1)); // left
-              corner00 = !isTransparent(getBlock(ix - 1, iy + 1, iz - 1));
-              corner01 = !isTransparent(getBlock(ix - 1, iy + 1, iz + 1));
-              corner10 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
-              corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
+              side0 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz    )); // up
+              side1 = shouldApplyAO(getBlock(ix - 1, iy    , iz + 1)); // right
+              side2 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz    )); // down
+              side3 = shouldApplyAO(getBlock(ix - 1, iy    , iz - 1)); // left
+              corner00 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz - 1));
+              corner01 = shouldApplyAO(getBlock(ix - 1, iy + 1, iz + 1));
+              corner10 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz - 1));
+              corner11 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz + 1));
             }
             else { // Bottom
-              side0 = !isTransparent(getBlock(ix    , iy - 1, iz - 1)); // up
-              side1 = !isTransparent(getBlock(ix - 1, iy - 1, iz    )); // right
-              side2 = !isTransparent(getBlock(ix    , iy - 1, iz + 1)); // down
-              side3 = !isTransparent(getBlock(ix + 1, iy - 1, iz    )); // left
-              corner00 = !isTransparent(getBlock(ix + 1, iy - 1, iz - 1));
-              corner01 = !isTransparent(getBlock(ix - 1, iy - 1, iz - 1));
-              corner10 = !isTransparent(getBlock(ix + 1, iy - 1, iz + 1));
-              corner11 = !isTransparent(getBlock(ix - 1, iy - 1, iz + 1));
+              side0 = shouldApplyAO(getBlock(ix    , iy - 1, iz - 1)); // up
+              side1 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz    )); // right
+              side2 = shouldApplyAO(getBlock(ix    , iy - 1, iz + 1)); // down
+              side3 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz    )); // left
+              corner00 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz - 1));
+              corner01 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz - 1));
+              corner10 = shouldApplyAO(getBlock(ix + 1, iy - 1, iz + 1));
+              corner11 = shouldApplyAO(getBlock(ix - 1, iy - 1, iz + 1));
             }
             a00 = vertexAO(side3, side0, corner00);
             a01 = vertexAO(side0, side1, corner01);
