@@ -10,6 +10,7 @@
 #include "core/input.hpp"
 #include "core/camera.hpp"
 #include "core/graphics/font.hpp"
+#include "core/graphics/frameBuffer.hpp"
 #include "core/object.hpp"
 #include "config.hpp"
 #include "game/terrain.hpp"
@@ -33,6 +34,9 @@ public:
   World* world;
 
   CollisionMapPtr collisionMap;
+
+  FramebufferPtr mainBuffer, waterBuffer, skyBuffer;
+  MeshPtr fullscreenQuad;
 
   Lines* crosshair;
   SkyDome* skyDome;

@@ -47,6 +47,15 @@ void Framebuffer::unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Framebuffer::copyTo(FramebufferPtr other) {
+  GLuint otherFbo = other != nullptr ? other->fbo : 0;
+
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, otherFbo);
+  glBlitFramebuffer(0, 0, width, height, 0, 0, other->width, other->height, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void Framebuffer::resize(int width, int height) {
   this->width = width;
   this->height = height;

@@ -51,7 +51,7 @@ OrthographicCamera::OrthographicCamera(float width, float height) {
 
 glm::mat4 OrthographicCamera::getProjectionViewMatrix() {
   glm::mat4 matView = glm::lookAt(position, position + front, up);
-  glm::mat4 matProjection = glm::ortho(-width/2, width/2, -height/2, height/2, near, far);
+  glm::mat4 matProjection = glm::ortho(-width/2, width/2, -height/2, height/2, near_, far_);
   return matProjection * matView;
 }
 
@@ -62,6 +62,6 @@ PerspectiveCamera::PerspectiveCamera(float ratio) {
 
 glm::mat4 PerspectiveCamera::getProjectionViewMatrix() {
   glm::mat4 matView = glm::lookAt(position, position + front, up);
-  glm::mat4 matProjection = glm::perspective(glm::radians(fov), ratio, near, far);
+  glm::mat4 matProjection = glm::perspective(glm::radians(fov), ratio, near_, far_);
   return matProjection * matView;
 }

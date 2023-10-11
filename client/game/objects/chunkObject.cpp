@@ -1,4 +1,5 @@
 #include "chunkObject.hpp"
+#include "../../core/graphics/drawCommand.hpp"
 
 #include "../../core/managers/assetManager.hpp"
 
@@ -28,6 +29,7 @@ ChunkObject::ChunkObject(World* world, int ox, int oy, int oz) {
   this->oz = oz;
 
   mesh = std::make_unique<ChunkMesh>();
+  waterMesh = std::make_shared<Mesh>();
 }
 
 ChunkObject::~ChunkObject() {
@@ -56,7 +58,6 @@ void ChunkObject::update(float dt) {
 
 void ChunkObject::draw(DrawContext& ctx) {
   if (chunkData == nullptr) return;
-  if (mesh->count == 0) return;
 
   auto shader = AssetManager::Instance()->getShader("block");
   shader->bind();
@@ -77,6 +78,23 @@ void ChunkObject::draw(DrawContext& ctx) {
   texture->bind();
 
   mesh->draw();
+
+  // water
+
+  auto waterShader = AssetManager::Instance()->getShader("water");
+  // waterShader->bind();
+  // waterShader->setMat4("uProjView", ctx.camera->getProjectionViewMatrix());
+  // waterShader->setVec3("uOffset", glm::vec3(ox*ChunkData::BLOCKS_X, oy*ChunkData::BLOCKS_Y, oz*ChunkData::BLOCKS_Z));
+  // waterMesh->draw();
+
+  DrawCommand waterDrawCommand;
+  waterDrawCommand.mesh = waterMesh;
+  waterDrawCommand.shader = waterShader;
+  waterDrawCommand.shaderParams = {
+    {"uProjView", ctx.camera->getProjectionViewMatrix()},
+    {"uOffset", glm::vec3(ox*ChunkData::BLOCKS_X, oy*ChunkData::BLOCKS_Y, oz*ChunkData::BLOCKS_Z)}
+  };
+  ctx.drawCommands.push_back(waterDrawCommand);
 }
 
 bool isTransparent(BlockType block) {
@@ -101,6 +119,7 @@ void ChunkObject::buildMesh() {
       for (int iz = 0; iz < ChunkData::BLOCKS_Z; iz++) {
         BlockType block = chunkData->get(ix, iy, iz);
         if (block == NONE) continue;
+        if (block == WATER) continue;
 
         int visibles[6] = {
           isTransparent(getBlock(ix, iy + 1, iz)), // top
@@ -222,4 +241,40 @@ void ChunkObject::buildMesh() {
   }
 
   mesh->update(positions, uvs, metadata);
+
+  // water
+  std::vector<float> waterPositions;
+  std::vector<float> waterUvs;
+
+  for (int ix = 0; ix < ChunkData::BLOCKS_X; ix++) {
+    for (int iy = 0; iy < ChunkData::BLOCKS_Y; iy++) {
+      for (int iz = 0; iz < ChunkData::BLOCKS_Z; iz++) {
+        BlockType block = chunkData->get(ix, iy, iz);
+        if (block != WATER) continue;
+
+        BlockType adjBlocks[6] = {
+          getBlock(ix, iy + 1, iz), // top
+          getBlock(ix, iy, iz + 1), // front
+          getBlock(ix + 1, iy, iz), // right
+          getBlock(ix, iy, iz - 1), // back
+          getBlock(ix - 1, iy, iz), // left
+          getBlock(ix, iy - 1, iz) // bottom
+        };
+
+        for (int iFace = 0; iFace < 6; iFace++) { // for each face
+          if (adjBlocks[iFace] == WATER || !isTransparent(adjBlocks[iFace])) continue;
+
+          for (int j = 0; j < 6; j++) { // add vec3 * 6 positions
+            waterPositions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 0] + ix);
+            waterPositions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 1] + iy);
+            waterPositions.push_back(BLOCK_VERTEX_POSITIONS[3*6*iFace + 3*j + 2] + iz);
+            waterUvs.push_back(0);
+            waterUvs.push_back(0);
+          }
+        }
+      }
+    }
+  }
+
+  waterMesh->update(waterPositions, waterUvs);
 }

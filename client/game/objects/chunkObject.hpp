@@ -50,6 +50,7 @@ public:
 
 private:
   std::unique_ptr<ChunkMesh> mesh;
+  MeshPtr waterMesh;
 
   BlockType getBlock(int x, int y, int z);
 };

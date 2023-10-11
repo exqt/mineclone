@@ -7,6 +7,7 @@
 
 Player::Player(glm::vec3 pos) {
   position = pos;
+  velocity = glm::vec3(0.0);
 
   previewBox = new Lines();
 
@@ -55,7 +56,6 @@ void Player::handleMovement(float dt) {
   Config config;
 
   if (input.isKeyPressed(SDL_SCANCODE_1)) isFlying = !isFlying;
-  // isFlying = true;
 
   // mouse handle
   const float mouseIntensity = 1.0;

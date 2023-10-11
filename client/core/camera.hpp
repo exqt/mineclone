@@ -16,8 +16,8 @@ public:
 
   float yaw = 0, pitch = 0, roll = 0;
   float fov = 45;
-  float near = 0.1f;
-  float far = 100.0f;
+  float near_ = 0.1f;
+  float far_ = 100.0f;
 
   Camera();
   ~Camera();

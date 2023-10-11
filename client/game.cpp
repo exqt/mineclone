@@ -25,13 +25,14 @@ Game::Game() {
 
   camera = new PerspectiveCamera((float)800/600);
   camera->position = glm::vec3(0.0, 0.0, 3.0);
-  camera->far = 1000.0;
+  camera->far_ = 1000.0;
 
 
   player = new Player(glm::vec3(5.0, 50.0, 5.0));
   player->setCollisionMap(collisionMap);
   player->setCamera(camera);
   player->setWorld(world);
+  objects.push_back(player);
 
   crosshair = new Lines();
   crosshair->update({
@@ -44,8 +45,22 @@ Game::Game() {
 
   skyDome = new SkyDome();
 
-  objects.push_back(player);
+  fullscreenQuad = std::make_shared<Mesh>();
+  fullscreenQuad->update({
+    -1.0, -1.0, 0.0,
+    1.0, -1.0, 0.0,
+    -1.0, 1.0, 0.0,
 
+    1.0, -1.0, 0.0,
+    1.0, 1.0, 0.0,
+    -1.0, 1.0, 0.0,
+  }, {
+    0, 0,  1, 0,  0, 1,
+    1, 0,  1, 1,  0, 1,
+  });
+
+  GameState& gameState = GameState::Instance();
+  gameState.setMenuOpen(false);
 }
 
 Game::~Game() {
@@ -86,15 +101,65 @@ void Game::draw() {
   ctx.width = width;
   ctx.height = height;
 
-  skyDome->setTime(time);
-  skyDome->draw(ctx);
+  {
+    skyBuffer->clear();
+    skyBuffer->bind();
 
-  for (auto& [key, chunkObject] : chunkObjects) {
-    chunkObject->draw(ctx);
+    skyDome->setTime(time);
+    skyDome->draw(ctx);
+
+    skyBuffer->unbind();
   }
 
-  for (auto& object : objects) {
-    object->draw(ctx);
+  {
+    mainBuffer->clear();
+    mainBuffer->bind();
+
+    for (auto& [key, chunkObject] : chunkObjects) {
+      chunkObject->draw(ctx);
+    }
+    for (auto& object : objects) {
+      object->draw(ctx);
+    }
+
+    mainBuffer->unbind();
+  }
+
+  {
+    waterBuffer->clear();
+    waterBuffer->bind();
+    glDisable(GL_CULL_FACE);
+
+    for (auto &drawCmd : ctx.drawCommands) {
+      drawCmd.draw();
+    }
+    ctx.drawCommands.clear();
+
+    waterBuffer->unbind();
+
+    glEnable(GL_CULL_FACE);
+  }
+
+  {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    mainBuffer->colorTexture->bind(0);
+    mainBuffer->depthTexture->bind(1);
+    waterBuffer->colorTexture->bind(2);
+    waterBuffer->depthTexture->bind(3);
+    skyBuffer->colorTexture->bind(4);
+
+    auto shader = AssetManager::Instance()->getShader("combine");
+    shader->bind();
+    shader->setInt("uMainColor", 0);
+    shader->setInt("uMainDepth", 1);
+    shader->setInt("uWaterColor", 2);
+    shader->setInt("uWaterDepth", 3);
+    shader->setInt("uSkyColor", 4);
+    shader->setFloat("uCameraNear", camera->near_);
+    shader->setFloat("uCameraFar", camera->far_);
+
+    fullscreenQuad->draw();
   }
 
   auto shader = AssetManager::Instance()->getShader("lines");
@@ -120,6 +185,10 @@ void Game::setGameSize(int width, int height) {
   this->width = width;
   this->height = height;
   camera->ratio = (float)width / (float)height;
+
+  mainBuffer = std::make_shared<Framebuffer>(width, height);
+  waterBuffer = std::make_shared<Framebuffer>(width, height);
+  skyBuffer = std::make_shared<Framebuffer>(width, height);
 }
 
 void Game::processChunks() {

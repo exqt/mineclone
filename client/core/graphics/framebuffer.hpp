@@ -3,7 +3,11 @@
 #include <GL/glew.h>
 #include "texture.hpp"
 
+class Framebuffer;
+using FramebufferPtr = std::shared_ptr<Framebuffer>;
+
 class Framebuffer {
+
 public:
   Framebuffer();
   Framebuffer(int width, int height, bool color=true, bool depth=true, bool stencil=false);
@@ -11,6 +15,7 @@ public:
 
   void bind();
   void unbind();
+  void copyTo(FramebufferPtr other);
 
   void resize(int width, int height);
 
@@ -22,3 +27,4 @@ private:
   GLuint fbo;
   int width, height;
 };
+

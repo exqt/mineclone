@@ -17,6 +17,7 @@ public:
 
   void setVec4(std::string name, glm::vec4 vector);
   void setVec3(std::string name, glm::vec3 vector);
+  void setVec2(std::string name, glm::vec2 vector);
   void setMat4(std::string name, glm::mat4 matrix);
   void setInt(std::string name, int value);
   void setFloat(std::string name, float value);
