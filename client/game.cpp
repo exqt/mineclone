@@ -162,23 +162,28 @@ void Game::draw() {
     fullscreenQuad->draw();
   }
 
-  auto shader = AssetManager::Instance()->getShader("lines");
-  shader->bind();
-  shader->setMat4("uProjView", glm::ortho(-width/2.0f, width/2.0f, -height/2.0f, height/2.0f));
-  shader->setMat4("uModel", glm::mat4(1.0f));
-  crosshair->draw();
+  { // UI
+    glDisable(GL_DEPTH_TEST);
 
-  renderTime = (double)(SDL_GetPerformanceCounter() - renderStart) / SDL_GetPerformanceFrequency();
+    auto shader = AssetManager::Instance()->getShader("lines");
+    shader->bind();
+    shader->setMat4("uProjView", glm::ortho(-width/2.0f, width/2.0f, -height/2.0f, height/2.0f));
+    shader->setMat4("uModel", glm::mat4(1.0f));
+    crosshair->draw();
 
-  TickMeasure& tickMeasure = ::tickMeasure;
-  std::string fpsStr = "FPS:" + std::to_string(tickMeasure.ticks.size());
-  // std::string updateStr = "Update:" + std::to_string(int(updateTime * 1000.0)) + "ms";
-  // std::string renderStr = "Render:" + std::to_string(int(renderTime * 1000.0)) + "ms";
+    renderTime = (double)(SDL_GetPerformanceCounter() - renderStart) / SDL_GetPerformanceFrequency();
 
-  auto font = AssetManager::Instance()->getFont("exqt-ascii-mono.ttf");
-  font->draw(ctx, fpsStr, 0, height - 24);
-  // font->draw(&ctx, updateStr, 0, height - 48);
-  // font->draw(&ctx, renderStr, 0, height - 72);
+    TickMeasure& tickMeasure = ::tickMeasure;
+    std::string fpsStr = "FPS:" + std::to_string(tickMeasure.ticks.size());
+    // std::string updateStr = "Update:" + std::to_string(int(updateTime * 1000.0)) + "ms";
+    // std::string renderStr = "Render:" + std::to_string(int(renderTime * 1000.0)) + "ms";
+
+    auto font = AssetManager::Instance()->getFont("exqt-ascii-mono.ttf");
+    font->draw(ctx, fpsStr, 0, height - 24);
+
+    glEnable(GL_DEPTH_TEST);
+  }
+
 }
 
 void Game::setGameSize(int width, int height) {
