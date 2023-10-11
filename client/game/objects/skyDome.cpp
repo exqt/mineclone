@@ -68,6 +68,7 @@ void SkyDome::draw(DrawContext& ctx) {
   glm::vec3 positionBackup = ctx.camera->position;
   ctx.camera->position = glm::vec3(0.0f);
   shader->setMat4("uProjView", ctx.camera->getProjectionViewMatrix());
+  shader->setVec3("uCameraPosition", ctx.camera->position);
   ctx.camera->position = positionBackup;
 
   mesh->draw();
