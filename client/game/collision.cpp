@@ -328,7 +328,7 @@ std::vector<AABBColliderPtr> CollisionMap::getColliders(float px, float py, floa
       for (int j = ipy; j <= iqy; j++) {
         for (int k = ipz; k <= iqz; k++) {
           auto block = world->getBlock(i, j, k);
-          if (!isSolid(block)) continue;
+          if (!IS_SOLID(block)) continue;
 
           auto collider = std::make_shared<AABBCollider>(
             enable_shared_from_this::shared_from_this(),

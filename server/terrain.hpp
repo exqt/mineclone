@@ -1,10 +1,10 @@
 #pragma once
 
-#include "block.hpp"
 #include <array>
 #include <vector>
 #include <unordered_map>
-#include "chunkData.hpp"
+#include "../common/chunkData.hpp"
+#include "../common/block.hpp"
 
 class Terrain {
 public:

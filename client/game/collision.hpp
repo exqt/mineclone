@@ -9,7 +9,7 @@
 #include <optional>
 #include <memory>
 
-#include "world.hpp"
+#include "../../common/world.hpp"
 
 #include <glm/glm.hpp>
 

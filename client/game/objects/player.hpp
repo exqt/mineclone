@@ -41,6 +41,9 @@ private:
 
   std::vector<CollisionInfo> move(glm::vec3 dir);
 
+  void serialize(DataWriteStream& stream) override;
+  void deserialize(DataReadStream& stream) override;
+
   glm::vec3 velocity;
 
   bool isTargetingBlock = false;

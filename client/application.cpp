@@ -79,7 +79,17 @@ void Application::init() {
   AssetManager::Instance()->load();
 }
 
-#include <iostream>
+void Application::connect(std::string host, int port, std::string name) {
+  NetworkManager& networkManager = NetworkManager::Instance();
+  bool success = networkManager.connect(host, port);
+
+  if (!success) {
+    std::cout << "Failed to connect to server" << std::endl;
+    std::exit(1);
+  }
+
+  // networkManager.rpcCall("login", name);
+}
 
 void Application::run() {
   SDL_GL_SetSwapInterval(1);
@@ -92,7 +102,6 @@ void Application::run() {
   Uint64 lastTime = SDL_GetTicks64();
 
   Input& input = Input::Instance();
-  NetworkManager& networkManager = NetworkManager::Instance();
 
   bool shouldQuit = false;
   bool debug = false;
@@ -100,6 +109,8 @@ void Application::run() {
   Config config;
   Game game;
   game.setGameSize(config.width, config.height);
+
+  NetworkManager& networkManager = NetworkManager::Instance();
 
   while (!shouldQuit) {
     Uint64 currentTime = SDL_GetTicks64();
@@ -141,7 +152,10 @@ void Application::run() {
     if (input.isKeyPressed(config.esc)) shouldQuit = true;
     if (input.isKeyPressed(config.debug)) debug = !debug;
 
-    networkManager.service();
+    networkManager.service(
+      std::bind(&Game::onRPCResponse, &game, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&Game::onObjectSync, &game, std::placeholders::_1, std::placeholders::_2)
+    );
 
     game.update(dt/1000.0);
 
@@ -156,7 +170,7 @@ void Application::run() {
       ImGui_ImplOpenGL3_NewFrame();
       ImGui_ImplSDL2_NewFrame();
       ImGui::NewFrame();
-      ImGui::ShowDemoWindow(); // Show demo window! :)
+      // ImGui::ShowDemoWindow(); // Show demo window! :)
 
       infoView->draw(debugInfo);
 

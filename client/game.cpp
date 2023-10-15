@@ -21,12 +21,14 @@ TickMeasure tickMeasure;
 #include <iostream>
 Game::Game() {
   world = new World();
+  worldLoader = new WorldLoader();
+  worldLoader->world = world;
+
   collisionMap = std::make_shared<CollisionMap>(world);
 
   camera = new PerspectiveCamera((float)800/600);
   camera->position = glm::vec3(0.0, 0.0, 3.0);
   camera->far_ = 1000.0;
-
 
   player = new Player(glm::vec3(5.0, 50.0, 5.0));
   player->setCollisionMap(collisionMap);
@@ -196,16 +198,45 @@ void Game::setGameSize(int width, int height) {
   skyBuffer = std::make_shared<Framebuffer>(width, height);
 }
 
+void Game::onRPCResponse(std::string name, DataReadStream& stream) {
+  if (name == "getChunkData") {
+    int ox = stream.pop<int>();
+    int oy = stream.pop<int>();
+    int oz = stream.pop<int>();
+    auto data = stream.popVector<std::byte>();
+    auto chunkData = ChunkData::fromByteArray(data);
+    worldLoader->onRetrieveChunkData(ox, oy, oz, chunkData);
+  } else {
+    std::cerr << "ERROR: unknown RPC response: " << name << std::endl;
+    std::exit(1);
+  }
+}
+
+void Game::onObjectSync(ObjectId id, DataReadStream& stream) {
+  // auto type = stream.pop<ObjectType>();
+  auto it = std::find_if(objects.begin(), objects.end(), [&](Object* obj) {
+    return obj->id == id;
+  });
+
+  if (it == objects.end()) {
+    std::cerr << "ERROR: object not found" << std::endl;
+    std::exit(1);
+  }
+
+  auto object = *it;
+  object->deserialize(stream);
+}
+
 void Game::processChunks() {
-  world->update(player->position);
+  // world->update(player->position);
+  worldLoader->requestAroundPlayer(player->position.x, player->position.y, player->position.z);
 
   const int maxBuildsPerFrame = 4;
-  auto &meshBuildQueue = world->getRenderQueue();
-  for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue.empty(); i++) {
-    auto id = meshBuildQueue.front(); meshBuildQueue.pop();
-    auto data = world->getChunkData(id);
-    if (data == nullptr) continue;
+  for (int i = 0; i < maxBuildsPerFrame && worldLoader->hasChunksToRender(); i++) {
+    auto id = worldLoader->getChunkIdToRender();
     auto [ox, oy, oz] = id;
+    auto data = world->getChunkData(ox, oy, oz);
+    if (data == nullptr) continue;
     auto chunkKey = world->toChunkKey(ox, oy, oz);
 
     ChunkObject* chunkObject = nullptr;
@@ -221,6 +252,7 @@ void Game::processChunks() {
     chunkObject->buildMesh();
   }
 
+  /*
   auto& unloadQueue = world->getUnloadQueue();
   while (!unloadQueue.empty()) {
     auto id = unloadQueue.front(); unloadQueue.pop();
@@ -237,4 +269,5 @@ void Game::processChunks() {
       delete chunkObject;
     }
   }
+  */
 }

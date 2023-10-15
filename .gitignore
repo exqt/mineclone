@@ -6,4 +6,5 @@ build/*
 
 temp/*
 
-test/
+test/*
+

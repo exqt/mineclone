@@ -1,6 +1,6 @@
 #include "skyDome.hpp"
 
-#include "../../core/managers/assetManager.hpp"
+#include "../core/managers/assetManager.hpp"
 
 SkyDome::SkyDome() {
   mesh = new Mesh();

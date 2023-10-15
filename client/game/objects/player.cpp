@@ -4,6 +4,7 @@
 #include "../../core/input.hpp"
 #include "../gameState.hpp"
 #include "../../core/managers/assetManager.hpp"
+#include "../meshData.hpp"
 
 Player::Player(glm::vec3 pos) {
   position = pos;
@@ -195,4 +196,20 @@ std::vector<CollisionInfo> Player::move(glm::vec3 dir) {
   position = newPos - colliderOffset;
   camera->position = position + cameraOffset;
   return collisions;
+}
+
+void Player::serialize(DataWriteStream& stream) {
+  stream.push(position.x);
+  stream.push(position.y);
+  stream.push(position.z);
+  stream.push(camera->yaw);
+  stream.push(camera->pitch);
+}
+
+void Player::deserialize(DataReadStream& stream) {
+  position.x = stream.pop<float>();
+  position.y = stream.pop<float>();
+  position.z = stream.pop<float>();
+  camera->yaw = stream.pop<float>();
+  camera->pitch = stream.pop<float>();
 }

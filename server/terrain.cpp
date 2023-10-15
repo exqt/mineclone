@@ -174,7 +174,6 @@ void Terrain::plantsTree(ChunkDataPtr chunkData, int x, int y, int z) {
 }
 
 
-// very poor hash don't use it
 int Terrain::hash(int x, int z) {
   auto h = 0xdeadbeef;
   h ^= x * 0x9e3779b9;

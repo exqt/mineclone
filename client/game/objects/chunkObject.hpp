@@ -12,8 +12,8 @@
 #include <tuple>
 #include <memory>
 
-#include "../block.hpp"
-#include "../world.hpp"
+#include "../../../common/chunkData.hpp"
+#include "../../../common/world.hpp"
 #include "../collision.hpp"
 #include "../../core/object.hpp"
 #include "../../core/graphics/shader.hpp"

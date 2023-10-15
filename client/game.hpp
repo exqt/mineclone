@@ -13,15 +13,19 @@
 #include "core/graphics/frameBuffer.hpp"
 #include "core/object.hpp"
 #include "config.hpp"
-#include "game/terrain.hpp"
-#include "game/world.hpp"
 
 #include "game/objects/player.hpp"
-#include "game/objects/skyDome.hpp"
+#include "game/skyDome.hpp"
+#include "game/worldLoader.hpp"
 
 #include "application.hpp"
 #include "game/gameState.hpp"
 #include "game/objects/chunkObject.hpp"
+
+#include "../common/world.hpp"
+#include "../common/chunkData.hpp"
+#include "../common/gamePacket.hpp"
+#include "../common/byteStream.hpp"
 
 class Game {
 public:
@@ -29,9 +33,10 @@ public:
 
   PerspectiveCamera* camera;
   Config config;
-  Terrain* terrain;
   Player* player;
+
   World* world;
+  WorldLoader* worldLoader;
 
   CollisionMapPtr collisionMap;
 
@@ -48,6 +53,9 @@ public:
   void draw();
 
   void setGameSize(int width, int height);
+
+  void onRPCResponse(std::string name, DataReadStream& stream);
+  void onObjectSync(ObjectId id, DataReadStream& stream);
 
 private:
   int width, height;

@@ -4,6 +4,9 @@
 #include <memory>
 #include "block.hpp"
 
+class ChunkData;
+using ChunkDataPtr = std::shared_ptr<ChunkData>;
+
 class ChunkData {
 public:
   static const int BLOCKS_X = 16;
@@ -17,8 +20,11 @@ public:
   BlockType get(int x, int y, int z);
   void set(int x, int y, int z, BlockType block);
 
+  std::vector<std::byte> toByteArray();
+
+  static ChunkDataPtr fromByteArray(std::vector<std::byte> data);
+  static ChunkDataPtr createEmpty();
+
 private:
   BlockType blocks[BLOCKS_X][BLOCKS_Y][BLOCKS_Z];
 };
-
-using ChunkDataPtr = std::shared_ptr<ChunkData>;

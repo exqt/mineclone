@@ -1,7 +1,8 @@
 #include "chunkObject.hpp"
-#include "../../core/graphics/drawCommand.hpp"
 
+#include "../../core/graphics/drawCommand.hpp"
 #include "../../core/managers/assetManager.hpp"
+#include "../meshData.hpp"
 
 /* Chunk Mesh */
 ChunkMesh::ChunkMesh() {
@@ -62,17 +63,7 @@ void ChunkObject::draw(DrawContext& ctx) {
   auto shader = AssetManager::Instance()->getShader("block");
   shader->bind();
   shader->setMat4("uProjView", ctx.camera->getProjectionViewMatrix());
-  shader->setMat4(
-    "uModel",
-    glm::translate(
-      glm::mat4(1.0),
-      glm::vec3(
-        ox*ChunkData::BLOCKS_X,
-        oy*ChunkData::BLOCKS_Y,
-        oz*ChunkData::BLOCKS_Z
-      )
-    )
-  );
+  shader->setVec3("uOffset", glm::vec3(ox * ChunkData::BLOCKS_X, oy * ChunkData::BLOCKS_Y, oz * ChunkData::BLOCKS_Z));
 
   auto texture = AssetManager::Instance()->getTexture("blocks.png");
   texture->bind();

@@ -9,6 +9,7 @@
 
 #include <queue>
 #include <atomic>
+#include <string>
 
 #include "imgui/infoView.hpp"
 
@@ -18,6 +19,7 @@ public:
   ~Application();
 
   void init();
+  void connect(std::string host, int port, std::string name);
   void clean();
   void run();
 

@@ -6,7 +6,6 @@ find_package(SDL2 REQUIRED)
 
 message(${CMAKE_CURRENT_SOURCE_DIR})
 
-# Mineclone
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
 )
@@ -18,11 +17,19 @@ get_filename_component(PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
 message("Parent directory: ${PARENT_DIR}")
 set(THIRD_PARTY_DIR "${PARENT_DIR}/thirdparty")
 
-add_executable(${PROJECT_NAME} ${SRC_FILES})
+
+file(GLOB_RECURSE COMMON_FILES CONFIGURE_DEPENDS
+  ${PARENT_DIR}/common/*.cpp
+)
+
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${COMMON_FILES})
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
+
+# libraries
 # FastNoise
 set(FASTNOISE2_NOISETOOL OFF CACHE BOOL "Build Noise Tool" FORCE)
 add_subdirectory("${THIRD_PARTY_DIR}/FastNoise2" thirdparty/FastNoise2)

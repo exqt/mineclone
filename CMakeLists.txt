@@ -8,5 +8,6 @@ project(
 
 message(STATUS "CMake version: ${CMAKE_VERSION}!")
 
+add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
