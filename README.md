@@ -1,5 +1,5 @@
 # Mineclone
-![](screenshots/0.png)
+![](screenshots/1.png)
 
 Minecraft clone from scratch
 
@@ -16,7 +16,7 @@ Work in progress
 - [ ] CI/CD
 
 # Bugs
-- [ ] Collision is not working properly (floating point precision error)
+- [ ] floating point precision error in collision detection
 
 # Requirements
 - gcc (C++17)
