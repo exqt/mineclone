@@ -214,8 +214,16 @@ void Game::onRPC(DataReadStream& stream) {
       if (fn) fn(networkObject);
       else std::cerr << "ERROR: unknown object type: " << networkObject.type << std::endl;
     }
-
-  } else {
+  }
+  else if (name == "OBJECT_DESTROY") {
+    auto id = stream.pop<int>();
+    if (objects.count(id) == 1) {
+      auto object = objects[id];
+      objects.erase(id);
+      delete object;
+    }
+  }
+  else {
     std::cerr << "ERROR: unknown RPC response: " << name << std::endl;
     std::exit(1);
   }
@@ -313,7 +321,6 @@ void Game::registerObjects() {
     world->setChunkData(ox, oy, oz, chunkData);
     chunkObject->setChunkData(chunkData);
     chunkObjects[world->toChunkKey(ox, oy, oz)] = chunkObject;
-    objects[data.id] = chunkObject;
 
     meshBuildQueue.updateChunk(ox, oy, oz);
   };

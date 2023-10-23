@@ -216,13 +216,19 @@ std::vector<CollisionInfo> MyPlayer::move(glm::vec3 dir) {
 #include "../meshData.hpp"
 
 OtherPlayer::OtherPlayer() {
-  mesh = std::shared_ptr<Mesh>();
+  position = glm::vec3(0.0);
+  mesh = std::make_shared<Mesh>();
 
+  // temporary player mesh
   auto playerMesh = BLOCK_VERTEX_POSITIONS;
+  auto playerUVs = std::vector<float>(playerMesh.size());
   for (size_t i = 0; i < playerMesh.size(); i++) {
-    if (i % 3 == 1) playerMesh[i] *= 2;
+    if (i % 3 == 0) playerMesh[i] -= 0.5;
+    else if (i % 3 == 1) playerMesh[i] *= 2;
+    else if (i % 3 == 2) playerMesh[i] -= 0.5;
+    playerUVs[i] = 1.0;
   }
-  mesh->update(playerMesh, {});
+  mesh->update(playerMesh, playerUVs);
 }
 
 OtherPlayer::~OtherPlayer() {
@@ -232,11 +238,12 @@ void OtherPlayer::update(float dt) {
 }
 
 void OtherPlayer::draw(DrawContext& ctx) {
-  auto shader = AssetManager::Instance()->getShader("main");
-  shader->bind();
-
   auto modelMat = glm::translate(glm::mat4(1.0), position);
+
+  auto shader = AssetManager::Instance()->getShader("model");
+  shader->bind();
   shader->setMat4("uModel", modelMat);
+  shader->setMat4("uProjView", ctx.camera->getProjectionViewMatrix());
 
   mesh->draw();
 }

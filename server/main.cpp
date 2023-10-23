@@ -15,7 +15,8 @@ int main(int argc, char** argv) {
   Server* server = new Server(port);
   Game* game = new Game(server);
 
-  server->onConnectCallback = std::bind(&Game::onConnect, game, std::placeholders::_1);
+  server->onConnectCallback = [&](User* user) { game->onConnect(user); };
+  server->onDisconnectCallback = [&](User* user) { game->onDisconnect(user); };
 
   std::cout << "Listening on port " << port << std::endl;
 

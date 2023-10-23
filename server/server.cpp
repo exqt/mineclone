@@ -95,11 +95,18 @@ void Server::onReceive(ENetEvent& event, RPC& fn) {
 }
 
 void Server::onDisconnect(ENetEvent& event) {
+  User* user = (User*)event.peer->data;
+
   std::cout << event.peer->data << " disconnected." << std::endl;
-  event.peer->data = nullptr;
 
   std::remove_if(users.begin(), users.end(), [&](User* user) {
     return user->peer == event.peer;
   });
-}
 
+  if (onDisconnectCallback) {
+    onDisconnectCallback(user);
+  }
+
+  delete user;
+  event.peer->data = nullptr;
+}

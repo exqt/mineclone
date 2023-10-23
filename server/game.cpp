@@ -94,21 +94,26 @@ void Game::createNetworkObject(std::string type, NetworkObjectOwner owner, std::
   server->broadcast(stream.data);
 }
 
-void Game::syncNetworkObject(NetworkObjectData data) {
+void Game::syncNetworkObject(NetworkObjectData data, User* user) {
   DataWriteStream stream;
   stream.pushString("OBJECT_SYNC");
   stream.pushVector(data.toByteArray());
 
   networkObjects[data.id].data = data.data;
 
-  server->broadcast(stream.data);
+  if (user) {
+    server->send(user, stream.data);
+  } else {
+    server->broadcast(stream.data);
+  }
 }
 
 void Game::destroyNetworkObject(NetworkObjectId id) {
+  networkObjects.erase(id);
+
   DataWriteStream stream;
   stream.pushString("OBJECT_DESTROY");
   stream.push<NetworkObjectId>(id);
-
   server->broadcast(stream.data);
 }
 
@@ -169,4 +174,21 @@ void Game::onConnect(User* user) {
   playerDataStream.push<float>(0);
 
   createNetworkObject("PLAYER", user->id, playerDataStream.data);
+
+  // send all existing objects
+  for (auto& [id, object] : networkObjects) {
+    if (object.owner != user->id) {
+      syncNetworkObject(object, user);
+    }
+  }
+}
+
+void Game::onDisconnect(User* user) {
+  std::cout << "User disconnected: " << user->id << std::endl;
+
+  for (auto& [id, object] : networkObjects) {
+    if (object.owner == user->id) {
+      destroyNetworkObject(id);
+    }
+  }
 }

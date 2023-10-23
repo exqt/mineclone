@@ -17,6 +17,7 @@ public:
   void onRPC(User* user, DataReadStream& data);
 
   void onConnect(User* user);
+  void onDisconnect(User* user);
 
 private:
   Server* server;
@@ -33,7 +34,7 @@ private:
   std::map<std::string, std::function<void(User*, DataReadStream&)>> rpcs;
 
   void createNetworkObject(std::string type, NetworkObjectOwner owner, std::vector<std::byte> data);
-  void syncNetworkObject(NetworkObjectData data);
+  void syncNetworkObject(NetworkObjectData data, User* user = nullptr);
   void destroyNetworkObject(NetworkObjectId id);
   void placeBlock(int x, int y, int z, BlockType block);
 

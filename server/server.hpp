@@ -10,11 +10,13 @@ extern "C" {
 #include <optional>
 
 #include "../common/byteStream.hpp"
+#include "../common/networkObject.hpp"
 
 struct User {
   int id;
   std::string name;
   ENetPeer* peer;
+  NetworkObjectId NetworkObjectId;
 };
 
 using RPC = std::function<void(User*, DataReadStream&)>;
@@ -29,7 +31,7 @@ public:
   void send(User* user, std::vector<std::byte> data);
   void broadcast(std::vector<std::byte> data);
 
-  std::function<void(User*)> onConnectCallback;
+  std::function<void(User*)> onConnectCallback, onDisconnectCallback;
 
 private:
   ENetHost* host;
