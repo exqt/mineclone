@@ -4,6 +4,7 @@
 #include <cassert>
 
 ChunkData::ChunkData() {
+  std::fill(blocks[0][0], blocks[0][0] + BLOCKS_TOTAL, BlockType::NONE);
 }
 
 ChunkData::~ChunkData() {
@@ -54,8 +55,9 @@ std::vector<std::byte> ChunkData::toByteArray() {
   return ret;
 }
 
-ChunkDataPtr ChunkData::fromByteArray(std::vector<std::byte> data) {
-  std::vector<std::byte> flatten;
+void ChunkData::copyFromByteArray(std::vector<std::byte> data) {
+  int count = 0;
+  BlockType* blocks = (BlockType*)this->blocks;
 
   for (size_t i = 0; i < data.size(); i++) {
     if (data[i] == (std::byte)BlockType::COMPRESSING_BYTE) {
@@ -63,28 +65,19 @@ ChunkDataPtr ChunkData::fromByteArray(std::vector<std::byte> data) {
       std::byte block = data[i + 2];
 
       for (int j = 0; j < cnt; j++) {
-        flatten.push_back(block);
+        blocks[count] = (BlockType)block;
+        count++;
       }
 
       i += 2;
     } else {
-      flatten.push_back(data[i]);
+      blocks[count] = (BlockType)data[i];
+      count++;
     }
   }
 
-  if (flatten.size() != BLOCKS_TOTAL) {
-    std::cerr << "ChunkData::fromByteArray: flatten.size() != BLOCKS_TOTAL" << std::endl;
+  if (count != BLOCKS_TOTAL) {
+    std::cerr << "count != BLOCKS_TOTAL" << std::endl;
     std::exit(1);
   }
-
-  ChunkDataPtr ret = std::make_shared<ChunkData>();
-  std::copy(flatten.begin(), flatten.end(), (std::byte*)ret->blocks);
-
-  return ret;
-}
-
-ChunkDataPtr ChunkData::createEmpty() {
-  ChunkDataPtr ret = std::make_shared<ChunkData>();
-  std::fill((std::byte*)ret->blocks, (std::byte*)ret->blocks + sizeof(ret->blocks), (std::byte)BlockType::NONE);
-  return ret;
 }

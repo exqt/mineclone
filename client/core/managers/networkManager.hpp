@@ -7,12 +7,12 @@ extern "C" {
 #include <vector>
 #include <string>
 #include <vector>
+#include <map>
 #include <functional>
 #include "../common/byteStream.hpp"
-#include "../common/gamePacket.hpp"
+#include "../common/networkObject.hpp"
 
-using RPCHandler = std::function<void(std::string, DataReadStream&)>;
-using ObjectSyncHandler = std::function<void(ObjectId, DataReadStream&)>;
+using RPCHandler = std::function<void(DataReadStream&)>;
 
 class NetworkManager {
 public:
@@ -21,15 +21,15 @@ public:
     return instance;
   }
 
-  NetworkManager() {}
-  ~NetworkManager() {}
+  NetworkManager();
+  ~NetworkManager();
 
   bool connect(std::string hostName, int port);
   void disconnect();
-  void service(RPCHandler rpc, ObjectSyncHandler sync);
+  void service(RPCHandler fn);
 
-  void rpcCall(std::string name, DataStream& stream);
-  void syncObject(ObjectId id, DataStream& stream);
+  void callRPC(std::string name, std::vector<std::byte>& data);
+  void send(std::vector<std::byte>& data);
 
 private:
   ENetHost* host;
@@ -37,6 +37,6 @@ private:
   bool isConnected;
 
   void onConnect(ENetEvent& event);
-  void onReceive(ENetEvent& event, RPCHandler rpc, ObjectSyncHandler sync);
+  void onReceive(ENetEvent& event, RPCHandler& fn);
   void onDisconnect(ENetEvent& event);
 };

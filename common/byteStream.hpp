@@ -16,6 +16,8 @@ public:
   template<typename T>
   void push(T value) {
     static_assert(!is_vector<T>::value, "DataStreams cannot push vectors. Use pushVector instead.");
+    static_assert(!std::is_same<T, std::string>::value, "DataStreams cannot push strings. Use pushString instead.");
+
 
     std::byte* bytes = reinterpret_cast<std::byte*>(&value);
     for (size_t i = 0; i < sizeof(T); i++) {
@@ -25,6 +27,9 @@ public:
 
   template<typename T>
   T pop() {
+    static_assert(!is_vector<T>::value, "DataStreams cannot push vectors. Use pushVector instead.");
+    static_assert(!std::is_same<T, std::string>::value, "DataStreams cannot push strings. Use pushString instead.");
+
     T value;
     std::byte* bytes = reinterpret_cast<std::byte*>(&value);
     for (size_t i = 0; i < sizeof(T); i++) {
@@ -78,6 +83,7 @@ protected:
 class DataReadStream : public DataStream {
 public:
   DataReadStream() {}
+  DataReadStream(std::vector<std::byte> data) { this->data = data; }
   ~DataReadStream() {}
 
   template<class T>
@@ -88,6 +94,7 @@ public:
 class DataWriteStream : public DataStream {
 public:
   DataWriteStream() {}
+  DataWriteStream(std::vector<std::byte> data) { this->data = data; }
   ~DataWriteStream() {}
 
   template<class T>

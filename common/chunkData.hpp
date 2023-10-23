@@ -21,9 +21,7 @@ public:
   void set(int x, int y, int z, BlockType block);
 
   std::vector<std::byte> toByteArray();
-
-  static ChunkDataPtr fromByteArray(std::vector<std::byte> data);
-  static ChunkDataPtr createEmpty();
+  void copyFromByteArray(std::vector<std::byte> data);
 
 private:
   BlockType blocks[BLOCKS_X][BLOCKS_Y][BLOCKS_Z];

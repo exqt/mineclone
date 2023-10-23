@@ -2,83 +2,7 @@
 
 #include <iostream>
 
-void NetworkManager::onConnect(ENetEvent& event) {
-  std::cout << "connected" << std::endl;
-  event.peer->data = (void*)"Test";
-}
-
-void NetworkManager::onReceive(ENetEvent& event, RPCHandler rpc, ObjectSyncHandler sync) {
-  auto data = std::vector<std::byte>((std::byte*)event.packet->data, (std::byte*)event.packet->data + event.packet->dataLength);
-  auto stream = DataReadStream();
-  stream.data = data;
-
-  auto type = stream.pop<GamePacketDataType>();
-  if (type == GamePacketDataType::RPC_RESPONSE) {
-    std::string methodName = stream.popString();
-    rpc(methodName, stream);
-  }
-  else if (type == GamePacketDataType::GAME_OBJECT_UPDATE) {
-    ObjectId id = stream.pop<ObjectId>();
-    sync(id, stream);
-  }
-  else {
-    std::cout << "Unknown packet type" << std::endl;
-  }
-
-  enet_packet_destroy(event.packet);
-
-}
-
-void NetworkManager::onDisconnect(ENetEvent& event) {
-  std::cout << "disconnected" << std::endl;
-  event.peer->data = NULL;
-}
-
-void NetworkManager::service(RPCHandler rpc, ObjectSyncHandler sync) {
-  if (!isConnected) return;
-
-  ENetEvent event;
-  while (enet_host_service(host, &event, 0) > 0) {
-    switch (event.type) {
-      case ENET_EVENT_TYPE_CONNECT:
-        onConnect(event);
-        break;
-
-      case ENET_EVENT_TYPE_RECEIVE:
-        onReceive(event, rpc, sync);
-        break;
-
-      case ENET_EVENT_TYPE_DISCONNECT:
-        onDisconnect(event);
-        break;
-
-      case ENET_EVENT_TYPE_NONE:
-        break;
-    }
-  }
-}
-
-void NetworkManager::rpcCall(std::string name, DataStream& stream) {
-  DataWriteStream writeStream;
-  writeStream.push(GamePacketDataType::RPC_CALL);
-  writeStream.pushString(name);
-  writeStream.data.insert(writeStream.data.end(), stream.data.begin(), stream.data.end());
-
-  ENetPacket* packet = enet_packet_create(writeStream.data.data(), writeStream.data.size(), ENET_PACKET_FLAG_RELIABLE);
-  enet_peer_send(peer, 0, packet);
-}
-
-void NetworkManager::syncObject(ObjectId id, DataStream& stream) {
-  DataWriteStream writeStream;
-  writeStream.push(GamePacketDataType::GAME_OBJECT_UPDATE);
-  writeStream.push(id);
-  writeStream.data.insert(writeStream.data.end(), stream.data.begin(), stream.data.end());
-
-  ENetPacket* packet = enet_packet_create(writeStream.data.data(), writeStream.data.size(), ENET_PACKET_FLAG_RELIABLE);
-  enet_peer_send(peer, 0, packet);
-}
-
-bool NetworkManager::connect(std::string hostName, int port) {
+NetworkManager::NetworkManager() {
   if (enet_initialize () != 0) {
     std::cerr << "An error occurred while initializing ENet.\n" << std::endl;
     std::exit(1);
@@ -94,7 +18,66 @@ bool NetworkManager::connect(std::string hostName, int port) {
     std::cerr << "An error occurred while trying to create an ENet client host." << std::endl;
     std::exit(1);
   }
+}
 
+NetworkManager::~NetworkManager() {
+  enet_host_destroy(host);
+  enet_deinitialize();
+}
+
+void NetworkManager::onConnect(ENetEvent& event) {
+  std::cout << "connected" << std::endl;
+}
+
+void NetworkManager::onReceive(ENetEvent& event, RPCHandler& fn) {
+  auto data = std::vector<std::byte>((std::byte*)event.packet->data, (std::byte*)event.packet->data + event.packet->dataLength);
+  auto stream = DataReadStream(data);
+  fn(stream);
+  enet_packet_destroy(event.packet);
+}
+
+void NetworkManager::onDisconnect(ENetEvent& event) {
+  std::cout << "disconnected" << std::endl;
+  event.peer->data = NULL;
+}
+
+void NetworkManager::service(RPCHandler fn) {
+  if (!isConnected) return;
+
+  ENetEvent event;
+  while (enet_host_service(host, &event, 0) > 0) {
+    switch (event.type) {
+      case ENET_EVENT_TYPE_CONNECT:
+        onConnect(event);
+        break;
+      case ENET_EVENT_TYPE_RECEIVE:
+        onReceive(event, fn);
+        break;
+      case ENET_EVENT_TYPE_DISCONNECT:
+        onDisconnect(event);
+        break;
+      case ENET_EVENT_TYPE_NONE:
+        break;
+    }
+  }
+}
+
+void NetworkManager::callRPC(std::string name, std::vector<std::byte>& data) {
+  auto stream = DataWriteStream();
+  stream.pushString(name);
+  stream.pushVector(data);
+  send(stream.data);
+}
+
+void NetworkManager::send(std::vector<std::byte> &data) {
+  ENetPacket* packet = enet_packet_create(&data[0], data.size(), ENET_PACKET_FLAG_RELIABLE);
+  if (enet_peer_send(peer, 0, packet) < 0) {
+    std::cerr << "Error sending packet" << std::endl;
+    std::exit(0);
+  }
+}
+
+bool NetworkManager::connect(std::string hostName, int port) {
   ENetAddress address;
   ENetEvent event;
 
@@ -120,6 +103,5 @@ bool NetworkManager::connect(std::string hostName, int port) {
 
 void NetworkManager::disconnect() {
   enet_host_destroy(host);
-  enet_deinitialize();
   isConnected = false;
 }

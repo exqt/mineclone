@@ -6,8 +6,22 @@
 #include "../../core/managers/assetManager.hpp"
 #include "../meshData.hpp"
 
-Player::Player(glm::vec3 pos) {
-  position = pos;
+void PlayerBase::serialize(DataWriteStream& stream) {
+  stream.push(position.x);
+  stream.push(position.y);
+  stream.push(position.z);
+}
+
+void PlayerBase::deserialize(DataReadStream& stream) {
+  position.x = stream.pop<float>();
+  position.y = stream.pop<float>();
+  position.z = stream.pop<float>();
+}
+
+#pragma region MyPlayer
+
+MyPlayer::MyPlayer() {
+  position = glm::vec3(0.0);
   velocity = glm::vec3(0.0);
 
   previewBox = new Lines();
@@ -20,14 +34,13 @@ Player::Player(glm::vec3 pos) {
   previewBox->update(boxVerts, BLOCK_PREVIEW_LINES_COLORS);
 }
 
-Player::~Player() {
-  // CollisionMap::removePlayer(collisionId);
+MyPlayer::~MyPlayer() {
 }
 
 #include "../../imgui/infoView.hpp"
 
 // TODO: control logic
-void Player::update(float dt) {
+void MyPlayer::update(float dt) {
   GameState& state = GameState::Instance();
   Config config;
 
@@ -42,7 +55,7 @@ void Player::update(float dt) {
   jumpBufferCounter -= dt;
 }
 
-void Player::draw(DrawContext& ctx) {
+void MyPlayer::draw(DrawContext& ctx) {
   if (isTargetingBlock) {
     auto shader = AssetManager::Instance()->getShader("lines");
     shader->bind();
@@ -52,7 +65,7 @@ void Player::draw(DrawContext& ctx) {
   }
 }
 
-void Player::handleMovement(float dt) {
+void MyPlayer::handleMovement(float dt) {
   Input& input = Input::Instance();
   Config config;
 
@@ -65,7 +78,6 @@ void Player::handleMovement(float dt) {
 
   float SPEED = 10.0;
   if (input.isKeyDown(config.sprint)) SPEED *= 2.0;
-
 
   if (!isFlying) {
     if (input.isKeyPressed(config.jump)) {
@@ -122,7 +134,7 @@ void Player::handleMovement(float dt) {
 
 #include <iostream>
 
-void Player::handleBlockAction(float dt) {
+void MyPlayer::handleBlockAction(float dt) {
   Input& input = Input::Instance();
   GameState& state = GameState::Instance();
   Config config;
@@ -171,45 +183,62 @@ void Player::handleBlockAction(float dt) {
   }
 }
 
-void Player::setPosition(glm::vec3 nwPos) {
+void MyPlayer::setPosition(glm::vec3 nwPos) {
   position = nwPos;
   camera->position = position + cameraOffset;
   if (collider) collider->update(position + colliderOffset, sizeX, sizeY, sizeZ);
 }
 
-void Player::setCollisionMap(CollisionMapPtr collisionMap) {
+void MyPlayer::setCollisionMap(CollisionMapPtr collisionMap) {
   this->collisionMap = collisionMap;
   this->collider = collisionMap->create(position + colliderOffset, sizeX, sizeY, sizeZ, ColliderTag::PLAYER);
 }
 
-void Player::setCamera(Camera* camera) {
+void MyPlayer::setCamera(Camera* camera) {
   this->camera = camera;
   camera->position = position + cameraOffset;
 }
 
-void Player::setWorld(World* world) {
+void MyPlayer::setWorld(World* world) {
   this->world = world;
 }
 
-std::vector<CollisionInfo> Player::move(glm::vec3 dir) {
+std::vector<CollisionInfo> MyPlayer::move(glm::vec3 dir) {
   auto [newPos, collisions] = collider->move(position + colliderOffset + dir);
   position = newPos - colliderOffset;
   camera->position = position + cameraOffset;
   return collisions;
 }
 
-void Player::serialize(DataWriteStream& stream) {
-  stream.push(position.x);
-  stream.push(position.y);
-  stream.push(position.z);
-  stream.push(camera->yaw);
-  stream.push(camera->pitch);
+#pragma endregion
+
+#pragma region OtherPlayer
+#include "../meshData.hpp"
+
+OtherPlayer::OtherPlayer() {
+  mesh = std::shared_ptr<Mesh>();
+
+  auto playerMesh = BLOCK_VERTEX_POSITIONS;
+  for (size_t i = 0; i < playerMesh.size(); i++) {
+    if (i % 3 == 1) playerMesh[i] *= 2;
+  }
+  mesh->update(playerMesh, {});
 }
 
-void Player::deserialize(DataReadStream& stream) {
-  position.x = stream.pop<float>();
-  position.y = stream.pop<float>();
-  position.z = stream.pop<float>();
-  camera->yaw = stream.pop<float>();
-  camera->pitch = stream.pop<float>();
+OtherPlayer::~OtherPlayer() {
 }
+
+void OtherPlayer::update(float dt) {
+}
+
+void OtherPlayer::draw(DrawContext& ctx) {
+  auto shader = AssetManager::Instance()->getShader("main");
+  shader->bind();
+
+  auto modelMat = glm::translate(glm::mat4(1.0), position);
+  shader->setMat4("uModel", modelMat);
+
+  mesh->draw();
+}
+
+#pragma endregion

@@ -269,3 +269,17 @@ void ChunkObject::buildMesh() {
 
   waterMesh->update(waterPositions, waterUvs);
 }
+
+void ChunkObject::serialize(DataWriteStream& stream) {
+  stream.push<int>(ox);
+  stream.push<int>(oy);
+  stream.push<int>(oz);
+  stream.pushVector(chunkData->toByteArray());
+}
+
+void ChunkObject::deserialize(DataReadStream& stream) {
+  ox = stream.pop<int>();
+  oy = stream.pop<int>();
+  oz = stream.pop<int>();
+  chunkData->copyFromByteArray(stream.popVector<std::byte>());
+}

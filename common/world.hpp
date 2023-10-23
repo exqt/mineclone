@@ -34,8 +34,6 @@ public:
   static ChunkKeyType toChunkKey(int x, int y, int z);
   static std::tuple<int,int,int> getChunkId(ChunkKeyType key);
 
-  std::function<ChunkDataPtr(int x, int y, int z)> chunkLoader;
-
 private:
   std::unordered_map<ChunkKeyType, ChunkDataPtr> chunks;
 };

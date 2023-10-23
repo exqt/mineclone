@@ -20,10 +20,7 @@ World::~World() {
 ChunkDataPtr World::getChunkData(int ox, int oy, int oz) {
   auto it = chunks.find(toChunkKey(ox, oy, oz));
   if (it != chunks.end()) return it->second;
-
-  auto chunkData = chunkLoader(ox, oy, oz);
-  chunks[toChunkKey(ox, oy, oz)] = chunkData;
-  return chunkData;
+  return nullptr;
 }
 
 void World::setChunkData(int ox, int oy, int oz, ChunkDataPtr data) {

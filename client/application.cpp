@@ -27,8 +27,6 @@ Application::~Application() {
 
 void Application::init() {
   Config config;
-  // NetworkManager& networkManager = NetworkManager::Instance();
-  // bool success = networkManager.connect("127.0.0.1", 7878);
 
  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     std::cerr << "SDL could not initialize! SDL Error:" << SDL_GetError() << std::endl;
@@ -87,8 +85,6 @@ void Application::connect(std::string host, int port, std::string name) {
     std::cout << "Failed to connect to server" << std::endl;
     std::exit(1);
   }
-
-  // networkManager.rpcCall("login", name);
 }
 
 void Application::run() {
@@ -111,6 +107,7 @@ void Application::run() {
   game.setGameSize(config.width, config.height);
 
   NetworkManager& networkManager = NetworkManager::Instance();
+
 
   while (!shouldQuit) {
     Uint64 currentTime = SDL_GetTicks64();
@@ -152,12 +149,10 @@ void Application::run() {
     if (input.isKeyPressed(config.esc)) shouldQuit = true;
     if (input.isKeyPressed(config.debug)) debug = !debug;
 
-    networkManager.service(
-      std::bind(&Game::onRPCResponse, &game, std::placeholders::_1, std::placeholders::_2),
-      std::bind(&Game::onObjectSync, &game, std::placeholders::_1, std::placeholders::_2)
-    );
+    networkManager.service(std::bind(&Game::onRPC, &game, std::placeholders::_1));
 
     game.update(dt/1000.0);
+    game.syncOwnedObjects();
 
     game.draw();
 

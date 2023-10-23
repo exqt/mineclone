@@ -2,8 +2,8 @@
 
 #include "../core/graphics/mesh.hpp"
 #include "../core/graphics/shader.hpp"
-#include "../core/drawContext.hpp"
-#include "../core/camera.hpp"
+#include "../core/graphics/drawContext.hpp"
+#include "../core/graphics/camera.hpp"
 
 class SkyDome {
 public:

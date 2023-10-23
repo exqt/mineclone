@@ -48,6 +48,11 @@ public:
   void update(float dt);
   void draw(DrawContext& ctx);
 
+  void serialize(DataWriteStream& stream) override;
+  void deserialize(DataReadStream& stream) override;
+
+  virtual std::string getNetworkType() { return "CHUNK"; }
+
 private:
   std::unique_ptr<ChunkMesh> mesh;
   MeshPtr waterMesh;

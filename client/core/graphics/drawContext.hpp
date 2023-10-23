@@ -4,8 +4,8 @@
 #include <glm/glm.hpp>
 
 #include "camera.hpp"
-#include "graphics/frameBuffer.hpp"
-#include "graphics/drawCommand.hpp"
+#include "frameBuffer.hpp"
+#include "drawCommand.hpp"
 
 struct DrawContext {
   DrawContext() {}

@@ -11,3 +11,8 @@ message(STATUS "CMake version: ${CMAKE_VERSION}!")
 add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
+
+# if test directory exists, add it
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test")
+  add_subdirectory(test)
+endif()

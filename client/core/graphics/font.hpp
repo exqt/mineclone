@@ -6,7 +6,7 @@
 #include "texture.hpp"
 #include "shader.hpp"
 #include "mesh.hpp"
-#include "../drawContext.hpp"
+#include "drawContext.hpp"
 
 #include <stb_truetype.h>
 

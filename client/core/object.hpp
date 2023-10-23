@@ -1,21 +1,22 @@
 #pragma once
 
-#include "drawContext.hpp"
+#include "../core/graphics/drawContext.hpp"
 #include "../../common/byteStream.hpp"
 
 #include <vector>
+#include <string>
 
 class Object {
 public:
-  Object();
-  virtual ~Object();
+  Object() {}
+  virtual ~Object() {};
 
-  unsigned long long id;
+  virtual void update(float dt) = 0;
+  virtual void draw(DrawContext& drawCtx) = 0;
 
-  virtual void update(float dt);
-  virtual void draw(DrawContext& drawCtx);
+  virtual void serialize(DataWriteStream& stream) = 0;
+  virtual void deserialize(DataReadStream& stream) = 0;
 
-  virtual void serialize(DataWriteStream& stream) {}
-  virtual void deserialize(DataReadStream& stream) {}
+  virtual std::string getNetworkType() = 0;
 private:
 };

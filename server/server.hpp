@@ -10,41 +10,33 @@ extern "C" {
 #include <optional>
 
 #include "../common/byteStream.hpp"
-#include "../common/gamePacket.hpp"
-
-#include "game.hpp"
-
-struct Object {
-  ObjectId id;
-  std::vector<std::byte> data;
-};
 
 struct User {
+  int id;
   std::string name;
   ENetPeer* peer;
 };
 
-using RPC = std::function<DataWriteStream(DataReadStream&)>;
+using RPC = std::function<void(User*, DataReadStream&)>;
 
 class Server {
 public:
   Server(int port = 7878);
   ~Server();
 
-  void service();
-
-private:
-  Game* game;
-
-  ENetHost* host;
-  std::vector<User*> users;
-  std::map<unsigned long long, Object> objects;
-  std::map<std::string, RPC> rpcs;
-
-  void onConnect(ENetEvent& event);
-  void onReceive(ENetEvent& event);
-  void onDisconnect(ENetEvent& event);
+  void service(RPC fn);
 
   void send(User* user, std::vector<std::byte> data);
   void broadcast(std::vector<std::byte> data);
+
+  std::function<void(User*)> onConnectCallback;
+
+private:
+  ENetHost* host;
+  int nextUserId = 1;
+  std::vector<User*> users;
+
+  void onConnect(ENetEvent& event);
+  void onReceive(ENetEvent& event, RPC& fn);
+  void onDisconnect(ENetEvent& event);
 };

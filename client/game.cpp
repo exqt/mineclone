@@ -21,20 +21,12 @@ TickMeasure tickMeasure;
 #include <iostream>
 Game::Game() {
   world = new World();
-  worldLoader = new WorldLoader();
-  worldLoader->world = world;
 
   collisionMap = std::make_shared<CollisionMap>(world);
 
   camera = new PerspectiveCamera((float)800/600);
   camera->position = glm::vec3(0.0, 0.0, 3.0);
   camera->far_ = 1000.0;
-
-  player = new Player(glm::vec3(5.0, 50.0, 5.0));
-  player->setCollisionMap(collisionMap);
-  player->setCamera(camera);
-  player->setWorld(world);
-  objects.push_back(player);
 
   crosshair = new Lines();
   crosshair->update({
@@ -63,6 +55,8 @@ Game::Game() {
 
   GameState& gameState = GameState::Instance();
   gameState.setMenuOpen(false);
+
+  registerObjects();
 }
 
 Game::~Game() {
@@ -86,12 +80,11 @@ void Game::update(float dt) {
     chunkObject->update(dt);
   }
 
-  for (auto& object : objects) {
+  for (auto& [id, object] : objects) {
     object->update(dt);
   }
 
   time = SDL_GetTicks64() / 1000.0;
-
   updateTime = (double)(SDL_GetPerformanceCounter() - updateStart) / SDL_GetPerformanceFrequency();
 }
 
@@ -120,7 +113,7 @@ void Game::draw() {
     for (auto& [key, chunkObject] : chunkObjects) {
       chunkObject->draw(ctx);
     }
-    for (auto& object : objects) {
+    for (auto& [id, object] : objects) {
       object->draw(ctx);
     }
 
@@ -198,56 +191,73 @@ void Game::setGameSize(int width, int height) {
   skyBuffer = std::make_shared<Framebuffer>(width, height);
 }
 
-void Game::onRPCResponse(std::string name, DataReadStream& stream) {
-  if (name == "getChunkData") {
-    int ox = stream.pop<int>();
-    int oy = stream.pop<int>();
-    int oz = stream.pop<int>();
+void Game::onRPC(DataReadStream& stream) {
+  std::string name = stream.popString();
+
+  if (name == "HELLO") {
+    userId = stream.pop<int>();
+  }
+  else if (name == "OBJECT_SYNC") {
     auto data = stream.popVector<std::byte>();
-    auto chunkData = ChunkData::fromByteArray(data);
-    worldLoader->onRetrieveChunkData(ox, oy, oz, chunkData);
+    auto networkObject = NetworkObjectData::fromByteArray(data);
+    auto id = networkObject.id;
+
+    if (objects.count(id) == 1) {
+      if (networkObject.owner != userId) {
+        Object* object = objects[id];
+        auto stream = DataReadStream(networkObject.data);
+        object->deserialize(stream);
+      }
+    }
+    else {
+      auto fn = objectCreators[networkObject.type];
+      if (fn) fn(networkObject);
+      else std::cerr << "ERROR: unknown object type: " << networkObject.type << std::endl;
+    }
+
   } else {
     std::cerr << "ERROR: unknown RPC response: " << name << std::endl;
     std::exit(1);
   }
 }
 
-void Game::onObjectSync(ObjectId id, DataReadStream& stream) {
-  // auto type = stream.pop<ObjectType>();
-  auto it = std::find_if(objects.begin(), objects.end(), [&](Object* obj) {
-    return obj->id == id;
-  });
+void Game::syncOwnedObjects() {
+  auto& networkManager = NetworkManager::Instance();
 
-  if (it == objects.end()) {
-    std::cerr << "ERROR: object not found" << std::endl;
-    std::exit(1);
+  for (auto& [id, object] : ownedObjects) {
+    auto stream = DataWriteStream();
+    object->serialize(stream);
+    auto data = stream.data;
+
+    auto networkObject = NetworkObjectData();
+    networkObject.id = id;
+    networkObject.owner = userId;
+    networkObject.type = object->getNetworkType();
+    networkObject.data = data;
+
+    auto objData = networkObject.toByteArray();
+    networkManager.callRPC("OBJECT_SYNC", objData);
   }
-
-  auto object = *it;
-  object->deserialize(stream);
 }
 
 void Game::processChunks() {
   // world->update(player->position);
-  worldLoader->requestAroundPlayer(player->position.x, player->position.y, player->position.z);
+  // worldLoader->requestAroundPlayer(player->position.x, player->position.y, player->position.z);
 
   const int maxBuildsPerFrame = 4;
-  for (int i = 0; i < maxBuildsPerFrame && worldLoader->hasChunksToRender(); i++) {
-    auto id = worldLoader->getChunkIdToRender();
+  for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue.isEmpty(); i++) {
+    auto id = meshBuildQueue.pop();
     auto [ox, oy, oz] = id;
     auto data = world->getChunkData(ox, oy, oz);
     if (data == nullptr) continue;
     auto chunkKey = world->toChunkKey(ox, oy, oz);
 
-    ChunkObject* chunkObject = nullptr;
-    if (chunkObjects.find(chunkKey) == chunkObjects.end()) {
-      chunkObject = new ChunkObject(world, ox, oy, oz);
-      chunkObjects[chunkKey] = chunkObject;
-    }
-    else {
-      chunkObject = chunkObjects[chunkKey];
+    if (chunkObjects.count(chunkKey) == 0) {
+      std::cerr << "ERROR: chunk not found: " << ox << ", " << oy << ", " << oz << std::endl;
+      std::exit(1);
     }
 
+    auto chunkObject = chunkObjects[chunkKey];
     chunkObject->setChunkData(data);
     chunkObject->buildMesh();
   }
@@ -270,4 +280,41 @@ void Game::processChunks() {
     }
   }
   */
+}
+
+void Game::registerObjects() {
+  objectCreators["PLAYER"] = [&](NetworkObjectData data) {
+    auto stream = DataReadStream(data.data);
+    if (userId == data.owner) {
+      player = new MyPlayer();
+      player->deserialize(stream);
+      player->setCollisionMap(collisionMap);
+      player->setCamera(camera);
+      player->setWorld(world);
+      objects[data.id] = player;
+      ownedObjects[data.id] = player;
+    }
+    else {
+      auto otherPlayer = new OtherPlayer();
+      otherPlayer->deserialize(stream);
+      objects[data.id] = otherPlayer;
+    }
+  };
+
+  objectCreators["CHUNK"] = [&](NetworkObjectData data) {
+    auto stream = DataReadStream(data.data);
+    auto ox = stream.pop<int>();
+    auto oy = stream.pop<int>();
+    auto oz = stream.pop<int>();
+    auto chunkData = std::make_shared<ChunkData>();
+    chunkData->copyFromByteArray(stream.popVector<std::byte>());
+
+    auto chunkObject = new ChunkObject(world, ox, oy, oz);
+    world->setChunkData(ox, oy, oz, chunkData);
+    chunkObject->setChunkData(chunkData);
+    chunkObjects[world->toChunkKey(ox, oy, oz)] = chunkObject;
+    objects[data.id] = chunkObject;
+
+    meshBuildQueue.updateChunk(ox, oy, oz);
+  };
 }
