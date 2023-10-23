@@ -28,7 +28,6 @@ public:
   void disconnect();
   void service(RPCHandler fn);
 
-  void callRPC(std::string name, std::vector<std::byte>& data);
   void send(std::vector<std::byte>& data);
 
 private:

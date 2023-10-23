@@ -203,6 +203,10 @@ void Game::onRPC(DataReadStream& stream) {
     auto id = networkObject.id;
 
     if (objects.count(id) == 1) {
+      if (networkObject.type == "CHUNK") {
+        std::cout << "!?" << std::endl;
+      }
+
       if (networkObject.owner != userId) {
         Object* object = objects[id];
         auto stream = DataReadStream(networkObject.data);
@@ -244,7 +248,11 @@ void Game::syncOwnedObjects() {
     networkObject.data = data;
 
     auto objData = networkObject.toByteArray();
-    networkManager.callRPC("OBJECT_SYNC", objData);
+
+    auto sendStream = DataWriteStream();
+    sendStream.pushString("OBJECT_SYNC");
+    sendStream.pushVector(objData);
+    networkManager.send(sendStream.data);
   }
 }
 
@@ -252,7 +260,7 @@ void Game::processChunks() {
   // world->update(player->position);
   // worldLoader->requestAroundPlayer(player->position.x, player->position.y, player->position.z);
 
-  const int maxBuildsPerFrame = 4;
+  const int maxBuildsPerFrame = 10;
   for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue.isEmpty(); i++) {
     auto id = meshBuildQueue.pop();
     auto [ox, oy, oz] = id;

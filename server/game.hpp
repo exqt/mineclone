@@ -29,7 +29,7 @@ private:
   std::map<NetworkObjectId, NetworkObjectData> networkObjects, ownedNetworkObjects;
 
   std::map<NetworkObjectId, NetworkObjectData> playerNetworkObjects;
-  std::map<std::tuple<int,int,int>, NetworkObjectData> chunkNetworkObjects;
+  std::map<std::tuple<int,int,int>, NetworkObjectId> chunkNetworkObjectIds;
 
   std::map<std::string, std::function<void(User*, DataReadStream&)>> rpcs;
 

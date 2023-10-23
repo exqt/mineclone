@@ -4,6 +4,8 @@
 #include "../../core/input.hpp"
 #include "../gameState.hpp"
 #include "../../core/managers/assetManager.hpp"
+#include "../../core/managers/networkManager.hpp"
+#include "../../../common/byteStream.hpp"
 #include "../meshData.hpp"
 
 void PlayerBase::serialize(DataWriteStream& stream) {
@@ -175,11 +177,10 @@ void MyPlayer::handleBlockAction(float dt) {
       return;
     }
 
-    // std::cout << "place block at " << x << " " << y << " " << z << std::endl;
-    world->placeBlock(facingBlockX, facingBlockY, facingBlockZ, BlockType::SAND);
+    placeBlock(facingBlockX, facingBlockY, facingBlockZ, BlockType::STONE);
   }
   else if (input.isKeyPressed(config.breakBlock)) {
-    world->placeBlock(targetBlockX, targetBlockY, targetBlockZ, BlockType::NONE);
+    placeBlock(targetBlockX, targetBlockY, targetBlockZ, BlockType::NONE);
   }
 }
 
@@ -208,6 +209,17 @@ std::vector<CollisionInfo> MyPlayer::move(glm::vec3 dir) {
   position = newPos - colliderOffset;
   camera->position = position + cameraOffset;
   return collisions;
+}
+
+void MyPlayer::placeBlock(int x, int y, int z, BlockType block) {
+  auto& networkManager = NetworkManager::Instance();
+  auto stream = DataWriteStream();
+  stream.pushString("PLACE_BLOCK");
+  stream.push(x);
+  stream.push(y);
+  stream.push(z);
+  stream.push(block);
+  networkManager.send(stream.data);
 }
 
 #pragma endregion

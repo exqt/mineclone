@@ -48,6 +48,7 @@ private:
 
   void handleMovement(float dt);
   void handleBlockAction(float dt);
+  void placeBlock(int x, int y, int z, BlockType block);
 
   std::vector<CollisionInfo> move(glm::vec3 dir);
 

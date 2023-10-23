@@ -62,13 +62,6 @@ void NetworkManager::service(RPCHandler fn) {
   }
 }
 
-void NetworkManager::callRPC(std::string name, std::vector<std::byte>& data) {
-  auto stream = DataWriteStream();
-  stream.pushString(name);
-  stream.pushVector(data);
-  send(stream.data);
-}
-
 void NetworkManager::send(std::vector<std::byte> &data) {
   ENetPacket* packet = enet_packet_create(&data[0], data.size(), ENET_PACKET_FLAG_RELIABLE);
   if (enet_peer_send(peer, 0, packet) < 0) {

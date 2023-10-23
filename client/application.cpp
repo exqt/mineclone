@@ -150,9 +150,9 @@ void Application::run() {
     if (input.isKeyPressed(config.debug)) debug = !debug;
 
     networkManager.service(std::bind(&Game::onRPC, &game, std::placeholders::_1));
+    game.syncOwnedObjects();
 
     game.update(dt/1000.0);
-    game.syncOwnedObjects();
 
     game.draw();
 

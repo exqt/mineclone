@@ -85,7 +85,13 @@ void Game::createNetworkObject(std::string type, NetworkObjectOwner owner, std::
   };
 
   networkObjects[object.id] = object;
-  //
+  if (type == "CHUNK") {
+    auto stream = DataReadStream(data);
+    auto x = stream.pop<int>();
+    auto y = stream.pop<int>();
+    auto z = stream.pop<int>();
+    chunkNetworkObjectIds[{x, y, z}] = object.id;
+  }
 
   DataWriteStream stream;
   stream.pushString("OBJECT_SYNC");
@@ -118,16 +124,33 @@ void Game::destroyNetworkObject(NetworkObjectId id) {
 }
 
 void Game::placeBlock(int x, int y, int z, BlockType block) {
-  world->placeBlock(x, y, z, block);
+  int ox = idiv(x, ChunkData::BLOCKS_X);
+  int oy = idiv(y, ChunkData::BLOCKS_Y);
+  int oz = idiv(z, ChunkData::BLOCKS_Z);
 
-  auto it = chunkNetworkObjects.find({x, y, z});
-  if (it == chunkNetworkObjects.end()) {
+  auto it = chunkNetworkObjectIds.find({ox, oy, oz});
+  if (it == chunkNetworkObjectIds.end()) {
     std::cout << "ERROR: chunk not found" << std::endl;
+    std::exit(1);
   }
 
-  auto chunkObject = it->second;
+  if (!world->isLoadedChunk(ox, oy, oz)) {
+    std::cout << "ERROR: chunk not loaded" << std::endl;
+    std::exit(1);
+  }
 
-  syncNetworkObject(chunkObject);
+  world->placeBlock(x, y, z, block);
+  auto id = it->second;
+  auto object = networkObjects[id];
+
+  auto stream = DataWriteStream();
+  stream.push<int>(ox);
+  stream.push<int>(oy);
+  stream.push<int>(oz);
+  stream.pushVector(world->getChunkData(ox, oy, oz)->toByteArray());
+  object.data = stream.data;
+
+  syncNetworkObject(object);
 }
 
 void Game::registerRPCs() {
