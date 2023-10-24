@@ -128,6 +128,8 @@ void Application::run() {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
           input.inputKeyboard(e.key); break;
+        case SDL_MOUSEWHEEL:
+          input.inputMouseWheel(e.wheel); break;
         case SDL_WINDOWEVENT:
           if (e.window.event == SDL_WINDOWEVENT_RESIZED) {
             int width = e.window.data1;

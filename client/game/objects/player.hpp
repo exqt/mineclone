@@ -7,6 +7,7 @@
 #include "../../core/graphics/camera.hpp"
 #include "../../core/graphics/mesh.hpp"
 #include "../../core/graphics/lines.hpp"
+#include "../inventory.hpp"
 
 class PlayerBase : public Object {
 public:
@@ -26,6 +27,7 @@ public:
 
   Camera* camera;
   World* world;
+  Inventory* inventory;
 
   Lines* previewBox;
 

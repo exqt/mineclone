@@ -28,6 +28,8 @@ Game::Game() {
   camera->position = glm::vec3(0.0, 0.0, 3.0);
   camera->far_ = 1000.0;
 
+  inventory = new Inventory();
+
   crosshair = new Lines();
   crosshair->update({
     4, 0, 0,  -4, 0, 0,
@@ -73,6 +75,8 @@ void Game::update(float dt) {
   if (input.isKeyPressed(config.menu)) {
     gameState.setMenuOpen(!gameState.isMenuOpen());
   }
+
+  inventory->update(dt);
 
   processChunks();
 
@@ -165,6 +169,8 @@ void Game::draw() {
     shader->setMat4("uProjView", glm::ortho(-width/2.0f, width/2.0f, -height/2.0f, height/2.0f));
     shader->setMat4("uModel", glm::mat4(1.0f));
     crosshair->draw();
+
+    inventory->draw(ctx);
 
     renderTime = (double)(SDL_GetPerformanceCounter() - renderStart) / SDL_GetPerformanceFrequency();
 
@@ -307,6 +313,7 @@ void Game::registerObjects() {
       player->setCollisionMap(collisionMap);
       player->setCamera(camera);
       player->setWorld(world);
+      player->inventory = inventory;
       objects[data.id] = player;
       ownedObjects[data.id] = player;
     }

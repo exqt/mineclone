@@ -15,6 +15,7 @@ void Input::clear() {
   _keyPressed.reset();
   _keyReleased.reset();
   _mouseDx = 0; _mouseDy = 0;
+  _mouseWheel = 0;
 }
 
 void Input::inputKeyboard(SDL_KeyboardEvent e) {
@@ -44,6 +45,10 @@ void Input::inputMouseButton(SDL_MouseButtonEvent e) {
   }
 }
 
+void Input::inputMouseWheel(SDL_MouseWheelEvent e) {
+  _mouseWheel = e.y;
+}
+
 bool Input::isKeyPressed(SDL_Scancode cd) {
   return _keyPressed[cd];
 }
@@ -62,4 +67,8 @@ MouseVec2 Input::getMouseMove() {
 
 MouseVec2 Input::getMousePosition() {
   return {_mouseX, _mouseY};
+}
+
+int Input::getMouseWheel() {
+  return _mouseWheel;
 }

@@ -20,6 +20,7 @@ public:
   void inputKeyState();
   void inputMouseMotion(SDL_MouseMotionEvent e);
   void inputMouseButton(SDL_MouseButtonEvent e);
+  void inputMouseWheel(SDL_MouseWheelEvent e);
   void inputKeyboard(SDL_KeyboardEvent e);
 
   void clear();
@@ -30,6 +31,7 @@ public:
   bool isKeyDown(SDL_Scancode cd);
   MouseVec2 getMouseMove();
   MouseVec2 getMousePosition();
+  int getMouseWheel();
 
 private:
   Input();
@@ -38,4 +40,5 @@ private:
   std::bitset<512> _keyPressed, _keyReleased;
   const Uint8* _keyState;
   int _mouseX, _mouseY, _mouseDx, _mouseDy;
+  int _mouseWheel;
 };

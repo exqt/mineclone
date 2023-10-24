@@ -17,6 +17,7 @@
 
 #include "game/objects/player.hpp"
 #include "game/skyDome.hpp"
+#include "game/inventory.hpp"
 
 #include "application.hpp"
 #include "game/gameState.hpp"
@@ -45,6 +46,7 @@ public:
 
   Lines* crosshair;
   SkyDome* skyDome;
+  Inventory* inventory;
 
   Game();
   ~Game();

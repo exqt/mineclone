@@ -177,7 +177,7 @@ void MyPlayer::handleBlockAction(float dt) {
       return;
     }
 
-    placeBlock(facingBlockX, facingBlockY, facingBlockZ, BlockType::STONE);
+    placeBlock(facingBlockX, facingBlockY, facingBlockZ, inventory->getCurrentBlock());
   }
   else if (input.isKeyPressed(config.breakBlock)) {
     placeBlock(targetBlockX, targetBlockY, targetBlockZ, BlockType::NONE);

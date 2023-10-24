@@ -19,7 +19,7 @@ enum BlockType : unsigned char {
   TREE_LEAVES_SAKURA,
   GLASS,
 
-  COLOR0,
+  COLOR0 = 16,
   COLOR1,
   COLOR2,
   COLOR3,
@@ -31,6 +31,10 @@ enum BlockType : unsigned char {
   COLOR9,
   COLOR10,
   COLOR11,
+  COLOR12,
+  COLOR13,
+  COLOR14,
+  COLOR15,
 
   COMPRESSING_BYTE = 0xFE,
   NOT_LOADED = 0xFF
