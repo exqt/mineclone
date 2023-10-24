@@ -71,6 +71,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
   target_link_options(${PROJECT_NAME} PRIVATE
     -static-libgcc
     -static-libstdc++
+    -static
   )
 
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
