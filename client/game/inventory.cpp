@@ -56,10 +56,10 @@ BlockType Inventory:: getCurrentBlock() {
 void Inventory::update(float dt) {
   auto& input = Input::Instance();
 
-  if (input.getMouseWheel() > 0) {
+  if (input.getMouseWheel() < 0) {
     currentIdx = (currentIdx + 1) % blocks.size();
   }
-  else if (input.getMouseWheel() < 0) {
+  else if (input.getMouseWheel() > 0) {
     currentIdx = (currentIdx - 1 + blocks.size()) % blocks.size();
   }
 }
