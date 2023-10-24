@@ -14,7 +14,7 @@ Server::Server(int port) {
   ENetAddress address = {0};
 
   address.host = ENET_HOST_ANY;
-  address.port = 7878;
+  address.port = port;
 
   #define MAX_CLIENTS 32
 
