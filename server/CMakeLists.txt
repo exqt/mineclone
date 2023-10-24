@@ -23,6 +23,15 @@ set_target_properties(${TARGET_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
+# if not debug build then link statically
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  target_link_options(${PROJECT_NAME}Server PRIVATE
+    -static-libgcc
+    -static-libstdc++
+    -static
+  )
+endif()
+
 if (NOT TARGET enet)
   add_subdirectory(${THIRD_PARTY_DIR}/enet thirdparty/enet)
 endif()
