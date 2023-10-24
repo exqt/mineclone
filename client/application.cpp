@@ -156,6 +156,7 @@ void Application::run() {
 
     game.update(dt/1000.0);
 
+    game.processChunks();
     game.draw();
 
 #ifdef DEBUG

@@ -52,6 +52,7 @@ BlockType ChunkObject::getBlock(int x, int y, int z) {
 
 void ChunkObject::setChunkData(ChunkDataPtr chunkData) {
   this->chunkData = chunkData;
+  meshBuildQueue->updateChunk(ox, oy, oz);
 }
 
 void ChunkObject::update(float dt) {
@@ -101,6 +102,8 @@ GLuint vertexAO(GLuint side1, GLuint side2, GLuint corner) {
 }
 
 void ChunkObject::buildMesh() {
+  if (chunkData == nullptr) return;
+
   std::vector<float> positions;
   std::vector<float> uvs;
   std::vector<GLuint> metadata;
@@ -282,4 +285,5 @@ void ChunkObject::deserialize(DataReadStream& stream) {
   oy = stream.pop<int>();
   oz = stream.pop<int>();
   chunkData->copyFromByteArray(stream.popVector<std::byte>());
+  meshBuildQueue->updateChunk(ox, oy, oz);
 }

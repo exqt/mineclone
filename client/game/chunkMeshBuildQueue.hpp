@@ -14,11 +14,12 @@ public:
   void updateBlock(int x, int y, int z);
   void updateChunk(int ox, int oy, int oz);
 
-  void push(int ox, int oy, int oz);
   std::tuple<int,int,int> pop();
   bool isEmpty();
 
 private:
   std::queue<std::tuple<int,int,int>> queue;
   std::unordered_set<ChunkKeyType> isInQueue;
+
+  void push(int ox, int oy, int oz);
 };

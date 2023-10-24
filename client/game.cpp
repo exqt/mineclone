@@ -24,6 +24,8 @@ Game::Game() {
 
   collisionMap = std::make_shared<CollisionMap>(world);
 
+  meshBuildQueue = new ChunkMeshBuildQueue();
+
   camera = new PerspectiveCamera((float)800/600);
   camera->position = glm::vec3(0.0, 0.0, 3.0);
   camera->far_ = 1000.0;
@@ -77,8 +79,6 @@ void Game::update(float dt) {
   }
 
   inventory->update(dt);
-
-  processChunks();
 
   for (auto& [key, chunkObject] : chunkObjects) {
     chunkObject->update(dt);
@@ -209,10 +209,6 @@ void Game::onRPC(DataReadStream& stream) {
     auto id = networkObject.id;
 
     if (objects.count(id) == 1) {
-      if (networkObject.type == "CHUNK") {
-        std::cout << "!?" << std::endl;
-      }
-
       if (networkObject.owner != userId) {
         Object* object = objects[id];
         auto stream = DataReadStream(networkObject.data);
@@ -263,24 +259,24 @@ void Game::syncOwnedObjects() {
 }
 
 void Game::processChunks() {
-  // world->update(player->position);
-  // worldLoader->requestAroundPlayer(player->position.x, player->position.y, player->position.z);
-
-  const int maxBuildsPerFrame = 10;
-  for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue.isEmpty(); i++) {
-    auto id = meshBuildQueue.pop();
+  const int maxBuildsPerFrame = 4;
+  for (int i = 0; i < maxBuildsPerFrame && !meshBuildQueue->isEmpty(); i++) {
+    auto id = meshBuildQueue->pop();
     auto [ox, oy, oz] = id;
-    auto data = world->getChunkData(ox, oy, oz);
-    if (data == nullptr) continue;
-    auto chunkKey = world->toChunkKey(ox, oy, oz);
 
+    auto data = world->getChunkData(ox, oy, oz);
+    if (data == nullptr) {
+      i--;
+      continue;
+    }
+
+    auto chunkKey = world->toChunkKey(ox, oy, oz);
     if (chunkObjects.count(chunkKey) == 0) {
       std::cerr << "ERROR: chunk not found: " << ox << ", " << oy << ", " << oz << std::endl;
       std::exit(1);
     }
 
     auto chunkObject = chunkObjects[chunkKey];
-    chunkObject->setChunkData(data);
     chunkObject->buildMesh();
   }
 
@@ -334,9 +330,9 @@ void Game::registerObjects() {
 
     auto chunkObject = new ChunkObject(world, ox, oy, oz);
     world->setChunkData(ox, oy, oz, chunkData);
+    chunkObject->meshBuildQueue = meshBuildQueue;
     chunkObject->setChunkData(chunkData);
     chunkObjects[world->toChunkKey(ox, oy, oz)] = chunkObject;
-
-    meshBuildQueue.updateChunk(ox, oy, oz);
+    objects[data.id] = chunkObject;
   };
 }

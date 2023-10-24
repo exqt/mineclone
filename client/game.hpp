@@ -59,17 +59,17 @@ public:
   void syncOwnedObjects();
   void onRPC(DataReadStream& stream);
 
+  void processChunks();
+
 private:
   NetworkObjectId userId = -1;
 
   int width, height;
   std::map<NetworkObjectId, Object*> objects, ownedObjects;
   std::map<ChunkKeyType, ChunkObject*> chunkObjects;
-  ChunkMeshBuildQueue meshBuildQueue;
+  ChunkMeshBuildQueue* meshBuildQueue;
 
   float updateTime = 0, renderTime = 0;
-
-  void processChunks();
 
   std::map<std::string, std::function<void(NetworkObjectData)>> objectCreators;
   void registerObjects();

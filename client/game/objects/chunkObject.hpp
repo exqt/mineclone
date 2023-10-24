@@ -19,6 +19,7 @@
 #include "../../core/graphics/shader.hpp"
 #include "../../core/graphics/texture.hpp"
 #include "../../core/graphics/mesh.hpp"
+#include "../chunkMeshBuildQueue.hpp"
 
 class ChunkMesh : public Mesh {
 public:
@@ -40,6 +41,7 @@ public:
   World *world;
 
   CollisionMap* collisionMap;
+  ChunkMeshBuildQueue* meshBuildQueue;
 
   void buildMesh();
 
