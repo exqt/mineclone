@@ -1,9 +1,25 @@
 # Mineclone
 ![](screenshots/1.png)
 
-Minecraft clone from scratch
+
+![](https://img.youtube.com/vi/OdZ4iz9_71A/sddefault.jpg)
+
+[demo video](https://www.youtube.com/watch?v=OdZ4iz9_71A)
+
+Minecraft clone from scratch.
 
 Work in progress
+
+# Control
+- WASD: move
+- Space: jump
+- F: toggle flying
+- Left Shift: sprint
+- Left Mouse Click: break block
+- Right Mouse Click: place block
+- Mouse Wheel: change block type
+- Tab: toggle relative mouse mode
+- Esc: exit
 
 # TODO List
 - [x] Chunk Rendering
@@ -12,7 +28,8 @@ Work in progress
 - [ ] Chunk Loading/Saving
 - [ ] Optimizations
 - [ ] Lighting
-- [ ] Multiplayer
+- [x] Multiplayer
+- [ ] Refactoring
 - [ ] CI/CD
 
 # Bugs
