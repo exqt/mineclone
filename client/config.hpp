@@ -11,6 +11,7 @@ struct Config {
   SDL_Scancode right = SDL_SCANCODE_D;
   SDL_Scancode jump = SDL_SCANCODE_SPACE;
   SDL_Scancode sprint = SDL_SCANCODE_LSHIFT;
+  SDL_Scancode fly = SDL_SCANCODE_F;
 
   SDL_Scancode esc = SDL_SCANCODE_ESCAPE;
   SDL_Scancode debug = SDL_SCANCODE_0;

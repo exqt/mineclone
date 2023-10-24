@@ -71,7 +71,10 @@ void MyPlayer::handleMovement(float dt) {
   Input& input = Input::Instance();
   Config config;
 
-  if (input.isKeyPressed(SDL_SCANCODE_1)) isFlying = !isFlying;
+  if (input.isKeyPressed(config.fly)) {
+    velocity.y = 0;
+    isFlying = !isFlying;
+  }
 
   // mouse handle
   const float mouseIntensity = 1.0;
@@ -105,8 +108,6 @@ void MyPlayer::handleMovement(float dt) {
       jumpBufferCounter = 0.0;
     }
 
-    // velocity.y = 0;
-
     auto collisions = move(velocity * dt);
 
     isGrounded = false;
@@ -120,7 +121,7 @@ void MyPlayer::handleMovement(float dt) {
       }
     }
   }
-  else {
+  else { // flying
     float deltaRight = 0, deltaFront = 0;
     if (input.isKeyDown(config.right)) deltaRight += SPEED;
     if (input.isKeyDown(config.left)) deltaRight -= SPEED;
