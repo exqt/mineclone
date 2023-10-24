@@ -20,6 +20,7 @@ private:
   int seed;
 
   void plantsTree(ChunkDataPtr chunkData, int x, int y, int z);
+  ChunkDataPtr getPlaneChunk();
 
   int hash(int x, int y);
 };

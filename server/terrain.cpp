@@ -75,8 +75,9 @@ std::vector<float> Terrain::getCaveData(int ox, int oy, int oz) {
 #include <chrono>
 
 ChunkDataPtr Terrain::getChunkData(int ox, int oy, int oz) {
+  if (std::max(std::abs(ox), std::abs(oz)) <= 2) return getPlaneChunk();
+
   ChunkDataPtr chunkData = std::make_shared<ChunkData>();
-  if (oy == 1) return chunkData;
 
   auto heights = getHeightData(ox, oz);
   // auto caves = getCaveData(ox, oy, oz);
@@ -139,6 +140,21 @@ ChunkDataPtr Terrain::getChunkData(int ox, int oy, int oz) {
       int h = heights[mapIndex(x, z, ChunkData::BLOCKS_X)];
       if (h < SEA_HEIGHT) continue;
       plantsTree(chunkData, x, h, z);
+    }
+  }
+
+  return chunkData;
+}
+
+ChunkDataPtr Terrain::getPlaneChunk() {
+  ChunkDataPtr chunkData = std::make_shared<ChunkData>();
+
+  for (int ix = 0; ix < ChunkData::BLOCKS_X; ix++) {
+    for (int iz = 0; iz < ChunkData::BLOCKS_Z; iz++) {
+      for (int iy = 0; iy < 70; iy++) {
+        chunkData->set(ix, iy, iz, DIRT);
+      }
+      chunkData->set(ix, 70, iz, DIRT_GRASS);
     }
   }
 
