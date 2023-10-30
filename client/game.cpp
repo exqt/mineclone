@@ -5,6 +5,7 @@
 
 #include "core/managers/networkManager.hpp"
 
+#include <iostream>
 #include <queue>
 
 struct TickMeasure {
@@ -18,7 +19,6 @@ struct TickMeasure {
 
 TickMeasure tickMeasure;
 
-#include <iostream>
 Game::Game() {
   world = new World();
 

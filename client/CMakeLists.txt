@@ -4,30 +4,35 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL2 REQUIRED)
 
-message(${CMAKE_CURRENT_SOURCE_DIR})
-
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-)
-
+# compiler flags
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG)
+
+endif()
+
+message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
+# files
 get_filename_component(PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)
-message("Parent directory: ${PARENT_DIR}")
 set(THIRD_PARTY_DIR "${PARENT_DIR}/thirdparty")
 
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB_RECURSE COMMON_FILES CONFIGURE_DEPENDS ${PARENT_DIR}/common/*.cpp)
 
-file(GLOB_RECURSE COMMON_FILES CONFIGURE_DEPENDS
-  ${PARENT_DIR}/common/*.cpp
-)
-
+# executable
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${COMMON_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
-
 
 # libraries
 # FastNoise
@@ -65,29 +70,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${THIRD_PARTY_DIR}/glm
 )
 
-# if not debug build then link statically
 message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+
+# linking
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   target_link_options(${PROJECT_NAME} PRIVATE
     -static-libgcc
     -static-libstdc++
     -static
   )
-
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG)
-
-elseif(CMAKE_BUILD_TYPE STREQUAL "Gprof")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg -no-pie")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-
-message("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
+# link libraries
 target_link_libraries(${PROJECT_NAME}
   GLEW::GLEW
   OpenGL::GL
@@ -95,6 +89,5 @@ target_link_libraries(${PROJECT_NAME}
 
   FastNoise
   imgui
-
   enet
 )

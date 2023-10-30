@@ -13,7 +13,7 @@ Texture::Texture(int width, int height, GLenum format, void* data) {
 }
 
 Texture::Texture(std::string path) {
-  int nChannels;
+  int nChannels = 0;
   unsigned char* data = stbi_load(path.c_str(), &width, &height, &nChannels, 0);
 
   if (nChannels == 1) {

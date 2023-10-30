@@ -59,7 +59,7 @@ private:
   friend class AABBCollider;
 };
 
-// TODO: fix circular pointer
+// TODO: fix circular pointer, add
 class CollisionMap : public std::enable_shared_from_this<CollisionMap> {
 public:
   CollisionMap(World* world);

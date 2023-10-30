@@ -3,14 +3,9 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
-
-#include <glm/gtx/norm.hpp>
-
-#include "../core/util.hpp"
-
 #include <vector>
 #include <utility>
-
+#include <glm/gtx/norm.hpp>
 
 const float EPS = 1e-6;
 
@@ -153,19 +148,9 @@ std::optional<CollisionInfo> AABB::collide(const AABB& other, glm::vec3 dir) {
   glm::vec3 normal, touch;
 
   if (intersects(other)) {
-    // local px, py    = rect_getNearestCorner(x,y,w,h, 0, 0)
-    auto p = minkowksiDiff.getNearestCorner(glm::vec3(0, 0, 0));
-    // local wi, hi    = min(w1, abs(px)), min(h1, abs(py)) -- area of intersection
-    float wi = std::min(w, abs(p.x));
-    float hi = std::min(h, abs(p.y));
-    float di = std::min(d, abs(p.z));
-    // ti              = -wi * hi -- ti is the negative area of intersection
-    ti = -wi * hi * di;
     overlaps = true;
   }
   else {
-    // local ti1,ti2,nx1,ny1 = rect_getSegmentIntersectionIndices(x,y,w,h, 0,0,dx,dy, -math.huge, math.huge)
-
     auto tv = minkowksiDiff.raycast(glm::vec3(0, 0, 0), dir);
 
     // item tunnels into other
@@ -183,27 +168,11 @@ std::optional<CollisionInfo> AABB::collide(const AABB& other, glm::vec3 dir) {
 
   if (std::isnan(ti)) return std::nullopt;
 
-  // float tx, ty
-
+  // TODO: handle overlaps case
   if (overlaps) {
     if (dir == glm::vec3(0, 0, 0)) {
-      // -- intersecting and not moving - use minimum displacement vector
-      // local px, py = rect_getNearestCorner(x,y,w,h, 0,0)
-      // if abs(px) < abs(py) then py = 0 else px = 0 end
-      // nx, ny = sign(px), sign(py)
-      // tx, ty = x1 + px, y1 + py
-      // std::exit(-1);
     }
     else {
-      // -- intersecting and moving - move in the opposite direction
-      // local ti1, _
-      // ti1,_,nx,ny = rect_getSegmentIntersectionIndices(x,y,w,h, 0,0,dx,dy, -math.huge, 1)
-      auto tv = minkowksiDiff.raycast(glm::vec3(0, 0, 0), dir);
-      // if not ti1 then return end
-      if (tv.size() == 0 || tv[0].first > 1.0) return std::nullopt;
-      // tx, ty = x1 + dx * ti1, y1 + dy * ti1
-      touch = pos + dir * tv[0].first;
-      // std::exit(-1);
     }
   }
   else {
