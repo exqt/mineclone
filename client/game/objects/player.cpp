@@ -215,7 +215,8 @@ std::vector<CollisionInfo> MyPlayer::move(glm::vec3 dir) {
 void MyPlayer::placeBlock(int x, int y, int z, BlockType block) {
   auto& networkManager = NetworkManager::Instance();
   auto stream = DataWriteStream();
-  stream.pushString("PLACE_BLOCK");
+  std::string funcName = "PLACE_BLOCK";
+  stream.push(funcName);
   stream.push(x);
   stream.push(y);
   stream.push(z);

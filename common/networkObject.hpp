@@ -14,21 +14,21 @@ struct NetworkObjectData {
   std::vector<std::byte> toByteArray() {
     DataWriteStream stream;
     stream.push<NetworkObjectId>(id);
-    stream.pushString(type);
+    stream.push<std::string>(type);
     stream.push<NetworkObjectOwner>(owner);
-    stream.pushVector(data);
+    stream.push<std::vector<std::byte>>(data);
     return stream.data;
   }
 
-  static NetworkObjectData fromByteArray(std::vector<std::byte> data) {
+  static NetworkObjectData fromByteArray(std::vector<std::byte>& data) {
     DataReadStream stream;
     stream.data = data;
 
     NetworkObjectData objData;
     objData.id = stream.pop<NetworkObjectId>();
-    objData.type = stream.popString();
+    objData.type = stream.pop<std::string>();
     objData.owner = stream.pop<NetworkObjectOwner>();
-    objData.data = stream.popVector<std::byte>();
+    objData.data = stream.pop<std::vector<std::byte>>();
 
     return objData;
   }

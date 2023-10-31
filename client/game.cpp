@@ -198,13 +198,13 @@ void Game::setGameSize(int width, int height) {
 }
 
 void Game::onRPC(DataReadStream& stream) {
-  std::string name = stream.popString();
+  std::string name = stream.pop<std::string>();
 
   if (name == "HELLO") {
     userId = stream.pop<int>();
   }
   else if (name == "OBJECT_SYNC") {
-    auto data = stream.popVector<std::byte>();
+    auto data = stream.pop<std::vector<std::byte>>();
     auto networkObject = NetworkObjectData::fromByteArray(data);
     auto id = networkObject.id;
 
@@ -252,8 +252,8 @@ void Game::syncOwnedObjects() {
     auto objData = networkObject.toByteArray();
 
     auto sendStream = DataWriteStream();
-    sendStream.pushString("OBJECT_SYNC");
-    sendStream.pushVector(objData);
+    sendStream.push<std::string>("OBJECT_SYNC");
+    sendStream.push<std::vector<std::byte>>(objData);
     networkManager.send(sendStream.data);
   }
 }
@@ -326,7 +326,7 @@ void Game::registerObjects() {
     auto oy = stream.pop<int>();
     auto oz = stream.pop<int>();
     auto chunkData = std::make_shared<ChunkData>();
-    chunkData->copyFromByteArray(stream.popVector<std::byte>());
+    chunkData->copyFromByteArray(stream.pop<std::vector<std::byte>>());
 
     auto chunkObject = new ChunkObject(world, ox, oy, oz);
     world->setChunkData(ox, oy, oz, chunkData);

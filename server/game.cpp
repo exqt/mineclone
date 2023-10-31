@@ -59,7 +59,7 @@ void Game::update() {
         stream.push<int>(ix);
         stream.push<int>(0);
         stream.push<int>(iz);
-        stream.pushVector(chunkData->toByteArray());
+        stream.push<std::vector<std::byte>>(chunkData->toByteArray());
 
         createNetworkObject("CHUNK", 0, stream.data);
       }
@@ -68,7 +68,7 @@ void Game::update() {
 }
 
 void Game::onRPC(User* user, DataReadStream& stream) {
-  std::string rpcName = stream.popString();
+  std::string rpcName = stream.pop<std::string>();
   if (rpcs.find(rpcName) != rpcs.end()) {
     rpcs[rpcName](user, stream);
   } else {
@@ -94,16 +94,16 @@ void Game::createNetworkObject(std::string type, NetworkObjectOwner owner, std::
   }
 
   DataWriteStream stream;
-  stream.pushString("OBJECT_SYNC");
-  stream.pushVector(object.toByteArray());
+  stream.push<std::string>("OBJECT_SYNC");
+  stream.push<std::vector<std::byte>>(object.toByteArray());
 
   server->broadcast(stream.data);
 }
 
 void Game::syncNetworkObject(NetworkObjectData data, User* user) {
   DataWriteStream stream;
-  stream.pushString("OBJECT_SYNC");
-  stream.pushVector(data.toByteArray());
+  stream.push<std::string>("OBJECT_SYNC");
+  stream.push<std::vector<std::byte>>(data.toByteArray());
 
   networkObjects[data.id].data = data.data;
 
@@ -118,7 +118,7 @@ void Game::destroyNetworkObject(NetworkObjectId id) {
   networkObjects.erase(id);
 
   DataWriteStream stream;
-  stream.pushString("OBJECT_DESTROY");
+  stream.push<std::string>("OBJECT_DESTROY");
   stream.push<NetworkObjectId>(id);
   server->broadcast(stream.data);
 }
@@ -147,7 +147,7 @@ void Game::placeBlock(int x, int y, int z, BlockType block) {
   stream.push<int>(ox);
   stream.push<int>(oy);
   stream.push<int>(oz);
-  stream.pushVector(world->getChunkData(ox, oy, oz)->toByteArray());
+  stream.push(world->getChunkData(ox, oy, oz)->toByteArray());
   object.data = stream.data;
 
   syncNetworkObject(object);
@@ -155,15 +155,16 @@ void Game::placeBlock(int x, int y, int z, BlockType block) {
 
 void Game::registerRPCs() {
   rpcs["OBJECT_CREATE"] = [&](User* user, DataReadStream& stream) {
-    auto type = stream.popString();
-    auto data = stream.popVector<std::byte>();
+    auto type = stream.pop<std::string>();
+    auto data = stream.pop<std::vector<std::byte>>();
     auto owner = user->id;
 
     createNetworkObject(type, owner, data);
   };
 
   rpcs["OBJECT_SYNC"] = [&](User* user, DataReadStream& stream) {
-    auto object = NetworkObjectData::fromByteArray(stream.popVector<std::byte>());
+    auto data = stream.pop<std::vector<std::byte>>();
+    auto object = NetworkObjectData::fromByteArray(data);
     syncNetworkObject(object);
   };
 
@@ -186,7 +187,7 @@ void Game::onConnect(User* user) {
   std::cout << "User connected: " << user->id << std::endl;
 
   DataWriteStream stream;
-  stream.pushString("HELLO");
+  stream.push<std::string>("HELLO");
   stream.push<int>(user->id);
   server->send(user, stream.data);
 
