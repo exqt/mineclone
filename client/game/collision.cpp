@@ -418,12 +418,14 @@ std::tuple<glm::vec3, std::vector<CollisionInfo>> AABBCollider::check(glm::vec3 
 
   collisionMap->removeFromCells(shared_from_this());
   auto projectedCols = collisionMap->project(this->aabb, goal);
+  auto aabb = this->aabb;
 
   int maxCollisionCount = 3;
   while (projectedCols.size() > 0 && maxCollisionCount-- > 0) {
     auto col = projectedCols[0];
     if (col.inside) break;
 
+    aabb.pos = col.touch;
     collisions.push_back(col);
 
     auto [nextGoal, cols] = slide(col, aabb, goal);
